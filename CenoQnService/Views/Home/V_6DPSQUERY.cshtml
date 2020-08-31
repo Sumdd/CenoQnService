@@ -1,0 +1,103 @@
+﻿<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>@ViewBag.Title</title>
+    <link href="../layui/css/layui.css" rel="stylesheet" />
+</head>
+<body>
+    <div class="layui-header">
+        <ul class="layui-nav layui-bg-green">
+            <li class="layui-nav-item">
+                <label>@ViewBag.Title</label>
+            </li>
+            @Html.Partial("~/Views/Home/P_NAV.cshtml")
+        </ul>
+    </div>
+    <div class="layui-card">
+        <div class="layui-card-header">
+            查询条件
+        </div>
+        <div class="layui-card-header layuiadmin-card-header-auto" id="defaultSp">
+            <form class="layui-form" lay-filter="defaultSearch">
+                <div class="layui-inline">
+                    <label class="layui-form-label" title="企业编号">企业编号</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="entID" autocomplete="off" class="layui-input" />
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label" title="企业安全码">企业安全码</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="entSecret" autocomplete="off" class="layui-input" />
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label" title="请求编号">请求编号</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="requestID" required lay-verify="required" lay-verType="tips" autocomplete="off" class="layui-input" value="@(m_cCmn.CcUUID)" />
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label" title="外呼标识号">外呼标识号</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="sessionIds" required lay-verify="required" lay-verType="tips" autocomplete="off" class="layui-input" />
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="layui-card-body">
+            <div class="layui-hide" id="defaultTable" lay-filter="defaultTable"></div>
+        </div>
+    </div>
+    <script src="../layui/layui.js"></script>
+    <script>
+        layui.config({
+            base: '@Url.Content("~/layui/modules/")'
+        }).use(['element', 'form', 'table', 'layer', 'core'], function () {
+            var $ = layui.jquery,
+                element = layui.element,
+                core = layui.core,
+                layer = layui.layer,
+                form = layui.form,
+                table = layui.table;
+
+            core.defaultQuery.url = '@Url.Content("~/Home/F_6DPSQUERY")';
+
+            table.render({
+                size: 'sm',
+                elem: '#defaultTable',
+                id: 'defaultTable',
+                method: 'post',
+                where: {
+                    queryString: core.queryString()
+                },
+                page: true,
+                even: true,
+                autoSort: false,
+                cellMinWidth: 80,
+                cols: [[
+                    { type: 'numbers', fixed: 'left' },
+                    { type: 'checkbox', fixed: 'left' },
+                    { field: 'sessionId', title: '通话唯一标识' },
+                    { field: 'userData', title: '随路信令' },
+                    { field: 'agentId', title: '坐席id' },
+                    { field: 'ani', title: '主叫号码' },
+                    { field: 'dnis', title: '被叫号码' },
+                    { field: 'dani', title: '主叫外显号码' },
+                    { field: 'ddnis', title: '被叫外显号码' },
+                    { field: 'startTime', title: '通话开始时间' },
+                    { field: 'endTime', title: '通话结束时间' },
+                    { field: 'callResult', title: '外呼结果' },
+                    { field: 'alertDuration', title: '振铃时长' },
+                    { field: 'talkDuration', title: '通话时长' },
+                    { field: 'endType', title: '挂断类型' }
+                ]]
+            });
+
+            core.loadQuery('@ViewBag.queryString');
+        });
+    </script>
+</body>
+</html>

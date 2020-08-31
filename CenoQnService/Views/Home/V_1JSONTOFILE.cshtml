@@ -1,0 +1,144 @@
+﻿<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>@ViewBag.Title</title>
+    <link href="../layui/css/layui.css" rel="stylesheet" />
+    <style>
+        .layui-form-label {
+            width: 150px;
+        }
+
+        .layui-input-block {
+            margin-left: 180px;
+        }
+    </style>
+</head>
+<body>
+    <div class="layui-header">
+        <ul class="layui-nav layui-bg-green">
+            <li class="layui-nav-item">
+                <label>@ViewBag.Title</label>
+            </li>
+            @Html.Partial("~/Views/Home/P_NAV.cshtml")
+        </ul>
+    </div>
+    <div class="layui-card">
+        <div class="layui-card-header">
+            @ViewBag.Title
+        </div>
+        <div class="layui-card-header layuiadmin-card-header-auto">
+            <form class="layui-form" lay-filter="defaultSearch">
+                <div class="layui-form-item">
+                    <label class="layui-form-label" title="企业编号">企业编号</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="entID" autocomplete="off" class="layui-input" />
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label" title="企业安全码">企业安全码</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="entSecret" autocomplete="off" class="layui-input" />
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label" title="请求编号">请求编号</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="requestID" required lay-verify="required" lay-verType="tips" autocomplete="off" class="layui-input" value="@(m_cCmn.XxUUID)" />
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label" title="二级机构编码">二级机构编码</label>
+                    <div class="layui-input-block">
+                        <select name="subId" required lay-verify="required" lay-verType="tips" autocomplete="off">
+                            <option value="">请选择省份</option>
+                            <option value="201">安徽省</option>
+                            <option value="202">北京市</option>
+                            <option value="203">福建省</option>
+                            <option value="204">甘肃省</option>
+                            <option value="205">广东省</option>
+                            <option value="206">广西壮族自治区</option>
+                            <option value="207">贵州省</option>
+                            <option value="208">海南省</option>
+                            <option value="209">河北省</option>
+                            <option value="210">河南省</option>
+                            <option value="211">黑龙江省</option>
+                            <option value="212">湖北省</option>
+                            <option value="213">湖南省</option>
+                            <option value="214">吉林省</option>
+                            <option value="215">江苏省</option>
+                            <option value="216">江西省</option>
+                            <option value="217">辽宁省</option>
+                            <option value="218">内蒙古自治区</option>
+                            <option value="219">宁夏回族自治区</option>
+                            <option value="220">青海省</option>
+                            <option value="221">山东省</option>
+                            <option value="222">陕西省</option>
+                            <option value="223">上海市</option>
+                            <option value="224">四川省</option>
+                            <option value="225">天津市</option>
+                            <option value="226">西藏自治区</option>
+                            <option value="227">新疆维吾尔自治区</option>
+                            <option value="228">云南省</option>
+                            <option value="229">浙江省</option>
+                            <option value="230">重庆市</option>
+                            <option value="231">山西省</option>
+                            <option value="232">香港特别行政区</option>
+                            <option value="233">澳门特别行政区</option>
+                            <option value="234">台湾</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label" title="JSON格式字符串(file)">JSON格式字符串(file)</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="file" required lay-verify="required" lay-vertype="tips" autocomplete="off" class="layui-input" />
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">
+                    </label>
+                    <div class="layui-input-block">
+                        <input type="text" readonly autocomplete="off" class="layui-input" style="color:blue;border:none;" value="说明：sno:数据唯一标识(数字,可不填);cid:身份证;username:坐席登录ID(可不填);Xm:姓名;Ywy:业务员" />
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <div class="layui-input-block">
+                        <button class="layui-btn" lay-submit lay-filter="formSumit" id="formSumit">立即提交</button>
+                        <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="layui-card-body">
+            <div class="layui-hide" id="defaultTable" lay-filter="defaultTable"></div>
+        </div>
+    </div>
+    <script src="../layui/layui.js"></script>
+    <script>
+        layui.config({
+            base: '@Url.Content("~/layui/modules/")'
+        }).use(['element', 'form', 'table', 'layer', 'core'], function () {
+            var $ = layui.jquery,
+                element = layui.element,
+                core = layui.core,
+                layer = layui.layer,
+                form = layui.form,
+                table = layui.table;
+
+            //表单提交
+            form.on('submit(formSumit)', function (data) {
+                core.req({
+                    that: $('#formSumit'),
+                    url: '@Url.Content("~/Home/F_1JSONTOFILE")',
+                    data: {
+                        queryString: core.queryString()
+                    }
+                });
+                return false;
+            });
+        });
+    </script>
+</body>
+</html>
