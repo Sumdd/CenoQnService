@@ -436,6 +436,9 @@ namespace CenoQnService.Controllers
                     m_cSQL.m_fSaveReqInfo(requestID, dt);
                     #endregion
 
+                    ///返回请求ID
+                    data = requestID;
+
                     return rJson(m_cXxCfg.entID);
                 }
                 else
