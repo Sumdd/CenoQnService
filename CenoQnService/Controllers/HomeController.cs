@@ -1490,6 +1490,8 @@ WHERE ISNULL(call_repair_list.IsDel,0) = 0
                 {
                     throw new Exception("请先登录");
                 }
+                ///设定Ywy是否必填
+                bool isMustYwy = m_cQuery.m_fGetQueryString(m_lQueryList, "isMustYwy") == "1";
                 ///是否返回文件的内容JSON
                 string hasJsonStr = m_cQuery.m_fGetQueryString(m_lQueryList, "hasJson");
                 if (string.IsNullOrWhiteSpace(hasJsonStr)) hasJsonStr = "1";
@@ -1544,6 +1546,9 @@ WHERE ISNULL(call_repair_list.IsDel,0) = 0
                     ///坐席ID
                     if (string.IsNullOrWhiteSpace(item["username"]?.ToString()))
                         item["username"] = ua;
+                    ///判断Ywy是否非空
+                    if (isMustYwy && string.IsNullOrWhiteSpace(item["Ywy"]?.ToString()))
+                        throw new Exception($"业务员必填：第{i}行");
                 }
 
                 ///转类至新文件并提交
