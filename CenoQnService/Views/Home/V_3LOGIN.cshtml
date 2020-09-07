@@ -51,7 +51,7 @@
                 <div class="layui-form-item">
                     <label class="layui-form-label" title="坐席ID">坐席ID</label>
                     <div class="layui-input-block">
-                        <input type="text" name="agentId" required lay-verify="required" lay-verType="tips" autocomplete="off" class="layui-input" />
+                        <input type="text" name="agentId" required lay-verify="required" lay-verType="tips" autocomplete="off" class="layui-input" value="@(Request.Cookies["ua"]?["agentId"]?.ToString())" />
                     </div>
                 </div>
                 <div class="layui-form-item">
@@ -63,19 +63,26 @@
                 <div class="layui-form-item">
                     <label class="layui-form-label" title="呼叫中心IP">呼叫中心IP</label>
                     <div class="layui-input-block">
-                        <input type="text" name="m_sIP" autocomplete="off" class="layui-input" value="@(System.Configuration.ConfigurationManager.AppSettings["m_sIP"])" />
+                        @{
+                            string m_sIP = Request.Cookies["ua"]?["m_sIP"]?.ToString();
+                            if (string.IsNullOrWhiteSpace(m_sIP))
+                            {
+                                m_sIP = System.Configuration.ConfigurationManager.AppSettings["m_sIP"];
+                            }
+                        }
+                        <input type="text" name="m_sIP" autocomplete="off" class="layui-input" value="@(m_sIP) " />
                     </div>
                 </div>
                 <div class="layui-form-item">
                     <label class="layui-form-label" title="呼叫中心登录名">呼叫中心登录名</label>
                     <div class="layui-input-block">
-                        <input type="text" name="m_sLoginName" autocomplete="off" class="layui-input" />
+                        <input type="text" name="m_sLoginName" autocomplete="off" class="layui-input" value="@(Request.Cookies["ua"]?["m_sLoginName"]?.ToString())" />
                     </div>
                 </div>
                 <div class="layui-form-item">
                     <label class="layui-form-label" title="续联号码绑定">续联号码绑定</label>
                     <div class="layui-input-block">
-                        <input type="text" name="m_sBindNumber" autocomplete="off" class="layui-input" />
+                        <input type="text" name="m_sBindNumber" autocomplete="off" class="layui-input" value="@(Request.Cookies["ua"]?["m_sBindNumber"]?.ToString())" />
                     </div>
                 </div>
                 <div class="layui-form-item">
