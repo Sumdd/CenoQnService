@@ -636,6 +636,8 @@ namespace CenoQnService.Controllers
                 string m_sIP = m_cQuery.m_fGetQueryString(m_lQueryList, "m_sIP");
                 ///呼叫中心登录名
                 string m_sLoginName = m_cQuery.m_fGetQueryString(m_lQueryList, "m_sLoginName");
+                ///续联号码绑定
+                string m_sBindNumber = m_cQuery.m_fGetQueryString(m_lQueryList, "m_sBindNumber");
 
                 ///参数构造
                 IDictionary<object, object> m_pDic = new Dictionary<object, object>();
@@ -658,6 +660,7 @@ namespace CenoQnService.Controllers
                     Response.Cookies["ua"]["agentId"] = agentId;
                     Response.Cookies["ua"]["m_sIP"] = m_sIP;
                     Response.Cookies["ua"]["m_sLoginName"] = m_sLoginName;
+                    Response.Cookies["ua"]["m_sBindNumber"] = m_sBindNumber;
                     Response.Cookies["ua"].Expires = DateTime.Now.AddDays(1);
 
                     return rJson(m_cCcCfg.entID);
@@ -1416,7 +1419,7 @@ WHERE ISNULL(call_repair_list.IsDel,0) = 0
         }
         #endregion
 
-        #region ***后台调用通用接口即可
+        #region ***后台调用通用接口
         public JsonResult m_fApplyXx(string m_sPhoneNumber, string m_sMD5 = "")
         {
             try
@@ -1430,6 +1433,43 @@ WHERE ISNULL(call_repair_list.IsDel,0) = 0
                 if (string.IsNullOrWhiteSpace(m_sIP)) throw new Exception("呼叫中心IP非空,请重新登录");
 
                 string m_sResultString = m_cHttp.m_fGet(url, $"m_sIP={m_sIP}&m_sLoginName={m_sLoginName}&m_sPhoneNumber={m_sPhoneNumber}&m_sMD5={m_sMD5}");
+                if (!string.IsNullOrWhiteSpace(m_sResultString))
+                {
+                    JObject m_pJObject = JObject.Parse(m_sResultString);
+                    status = Convert.ToInt32(m_pJObject["status"]);
+                    msg = m_pJObject["msg"].ToString();
+                    return rJson();
+                }
+                else
+                {
+                    msg = "请求无返回";
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Instance.Debug(ex);
+                msg = ex.Message;
+            }
+            return eJson();
+        }
+        #endregion
+
+        #region ***后台调用通用接口2,支持固定信修线路
+        public JsonResult m_fApplyXx2(string m_sPhoneNumber, string m_sMD5 = "")
+        {
+            try
+            {
+                string url = $"{System.Configuration.ConfigurationManager.AppSettings["m_sHttp"]}";
+
+                string m_sLoginName = Request.Cookies["ua"]?["m_sLoginName"]?.ToString();
+                if (string.IsNullOrWhiteSpace(m_sLoginName)) throw new Exception("呼叫中心登录名非空,请重新登录");
+
+                string m_sIP = Request.Cookies["ua"]?["m_sIP"]?.ToString();
+                if (string.IsNullOrWhiteSpace(m_sIP)) throw new Exception("呼叫中心IP非空,请重新登录");
+
+                string m_sBindNumber = Request.Cookies["ua"]?["m_sBindNumber"]?.ToString();
+
+                string m_sResultString = m_cHttp.m_fGet(url, $"m_sIP={m_sIP}&m_sLoginName={m_sLoginName}&m_sPhoneNumber={m_sPhoneNumber}&m_sMD5={m_sMD5}&m_sBindNumber={m_sBindNumber}");
                 if (!string.IsNullOrWhiteSpace(m_sResultString))
                 {
                     JObject m_pJObject = JObject.Parse(m_sResultString);
