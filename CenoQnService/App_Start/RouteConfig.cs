@@ -16,7 +16,7 @@ namespace CenoQnService
             routes.MapRoute(
                 name: "Default",
                 url: "{controller}/{action}/{id}",
-                defaults: new { controller = "Home", action = "V_1FILE", id = UrlParameter.Optional }
+                defaults: new { controller = "Home", action = "V_3LOGIN", id = UrlParameter.Optional }
             );
         }
     }

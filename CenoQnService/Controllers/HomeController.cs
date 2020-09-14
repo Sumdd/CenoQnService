@@ -832,6 +832,12 @@ namespace CenoQnService.Controllers
                 {
                     JObject m_pJObject = JObject.Parse(m_sResultString);
                     status = Convert.ToInt32(m_pJObject["code"]);
+
+                    ///获取代码,兼容未登录
+                    string m_sData = m_pJObject["data"].ToString();
+                    JObject m_pJData = JObject.Parse(m_sData);
+                    data = m_pJData["code"].ToString();
+
                     msg = m_pJObject["msg"].ToString();
                     ///返回分支
                     if (useUa)
@@ -921,6 +927,12 @@ namespace CenoQnService.Controllers
                 {
                     JObject m_pJObject = JObject.Parse(m_sResultString);
                     status = Convert.ToInt32(m_pJObject["code"]);
+
+                    ///获取代码,兼容未登录
+                    string m_sData = m_pJObject["data"].ToString();
+                    JObject m_pJData = JObject.Parse(m_sData);
+                    data = m_pJData["code"].ToString();
+
                     msg = m_pJObject["msg"].ToString();
                     return rJson(m_cCcCfg.entID);
                 }

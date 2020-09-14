@@ -61,10 +61,11 @@ INSERT INTO [dbo].[call_repair_info]
     [Ywy],
     [Shfzh],
     [sno],
-    [requestID]
+    [requestID],
+    [username]
 )
 VALUES
-('{m_cCmn.ID}', '{item["Xm"]}', '{item["Ywy"]}', '{item["cid"]}', '{item["sno"]}', @RequestID);
+('{m_cCmn.ID}', '{item["Xm"]}', '{item["Ywy"]}', '{item["cid"]}', '{item["sno"]}', @RequestID, '{item["username"]}');
 ";
                         m_lSQL.Add(m_sSQL);
                     }
