@@ -832,6 +832,31 @@ namespace CenoQnService.Controllers
                 {
                     JObject m_pJObject = JObject.Parse(m_sResultString);
                     status = Convert.ToInt32(m_pJObject["code"]);
+
+                    ///获取代码,兼容未登录
+                    if (m_pJObject.ContainsKey("data"))
+                    {
+                        string m_sData = m_pJObject["data"].ToString();
+                        JObject m_pJData = JObject.Parse(m_sData);
+                        ///响应码
+                        if (m_pJData.ContainsKey("code"))
+                        {
+                            data = m_pJData["code"].ToString();
+                        }
+
+                        ///追加录音保存,方便统计
+                        if (m_pJData.ContainsKey("ext"))
+                        {
+                            string ext = m_pJData["ext"].ToString();
+                            JObject m_pJExt = JObject.Parse(ext);
+                            if (m_pJExt.ContainsKey("sessionId"))
+                            {
+                                ///把sessionId直接存入,待后续查询通话记录
+                                m_cSQL.m_fSaveRecord(m_pJExt["sessionId"].ToString());
+                            }
+                        }
+                    }
+
                     msg = m_pJObject["msg"].ToString();
                     ///返回分支
                     if (useUa)
@@ -921,6 +946,31 @@ namespace CenoQnService.Controllers
                 {
                     JObject m_pJObject = JObject.Parse(m_sResultString);
                     status = Convert.ToInt32(m_pJObject["code"]);
+
+                    ///获取代码,兼容未登录
+                    if (m_pJObject.ContainsKey("data"))
+                    {
+                        string m_sData = m_pJObject["data"].ToString();
+                        JObject m_pJData = JObject.Parse(m_sData);
+                        ///响应码
+                        if (m_pJData.ContainsKey("code"))
+                        {
+                            data = m_pJData["code"].ToString();
+                        }
+
+                        ///追加录音保存,方便统计
+                        if (m_pJData.ContainsKey("ext"))
+                        {
+                            string ext = m_pJData["ext"].ToString();
+                            JObject m_pJExt = JObject.Parse(ext);
+                            if (m_pJExt.ContainsKey("sessionId"))
+                            {
+                                ///把sessionId直接存入,待后续查询通话记录
+                                m_cSQL.m_fSaveRecord(m_pJExt["sessionId"].ToString());
+                            }
+                        }
+                    }
+
                     msg = m_pJObject["msg"].ToString();
                     return rJson(m_cCcCfg.entID);
                 }

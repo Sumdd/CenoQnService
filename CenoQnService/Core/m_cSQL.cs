@@ -61,10 +61,11 @@ INSERT INTO [dbo].[call_repair_info]
     [Ywy],
     [Shfzh],
     [sno],
-    [requestID]
+    [requestID],
+    [username]
 )
 VALUES
-('{m_cCmn.ID}', '{item["Xm"]}', '{item["Ywy"]}', '{item["cid"]}', '{item["sno"]}', @RequestID);
+('{m_cCmn.ID}', '{item["Xm"]}', '{item["Ywy"]}', '{item["cid"]}', '{item["sno"]}', @RequestID, '{item["username"]}');
 ";
                         m_lSQL.Add(m_sSQL);
                     }
@@ -108,6 +109,33 @@ WHERE 1 = 1
                 Log.Instance.Debug($"[CenoQnService][m_cSQL][m_fQueryList][Exception][{ex.Message}]");
             }
             return null;
+        }
+
+        public static bool m_fSaveRecord(string sessionId)
+        {
+            try
+            {
+                string m_sSQL = $@"
+INSERT INTO [dbo].[call_repair_record]
+(
+    [sessionId],
+    [auto_status]
+)
+VALUES
+(@sessionId, 0);
+";
+                SqlSugarClient m_pEsyClient = new m_cSugar().EasyClient;
+                int m_uCount = m_pEsyClient.Ado.ExecuteCommand(m_sSQL, new
+                {
+                    sessionId = sessionId
+                });
+                return m_uCount > 0;
+            }
+            catch (Exception ex)
+            {
+                Log.Instance.Debug($"[CenoQnService][m_cSQL][m_fSaveRecord][Exception][{ex.Message}]");
+            }
+            return false;
         }
     }
 }
