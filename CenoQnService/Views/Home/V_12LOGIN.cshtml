@@ -1,0 +1,108 @@
+﻿<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>@ViewBag.Title</title>
+    <link href="../layui/css/layui.css" rel="stylesheet" />
+    <style>
+        .layui-form-label {
+            width: 150px;
+        }
+
+        .layui-input-block {
+            margin-left: 180px;
+        }
+    </style>
+</head>
+<body>
+    <div class="layui-header">
+        <ul class="layui-nav layui-bg-green">
+            <li class="layui-nav-item">
+                <label>@ViewBag.Title</label>
+            </li>
+            @Html.Partial("~/Views/Home/P_NAV.cshtml")
+        </ul>
+    </div>
+    <div class="layui-card">
+        <div class="layui-card-header">
+            @ViewBag.Title
+        </div>
+        <div class="layui-card-header layuiadmin-card-header-auto">
+            <form class="layui-form" lay-filter="defaultSearch">
+                <div class="layui-form-item">
+                    <label class="layui-form-label" title="坐席ID">坐席ID</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="agentId" required lay-verify="required" lay-verType="tips" autocomplete="off" class="layui-input" value="@(Request.Cookies["ua"]?["agentId"]?.ToString())" />
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label" title="密码">密码</label>
+                    <div class="layui-input-block">
+                        <input type="password" name="passWord" required lay-verify="required" lay-verType="tips" autocomplete="off" class="layui-input" />
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label" title="呼叫中心IP">呼叫中心IP</label>
+                    <div class="layui-input-block">
+                        @{
+                            string m_sIP = Request.Cookies["ua"]?["m_sIP"]?.ToString();
+                            if (string.IsNullOrWhiteSpace(m_sIP))
+                            {
+                                m_sIP = System.Configuration.ConfigurationManager.AppSettings["m_sIP"];
+                            }
+                        }
+                        <input type="text" name="m_sIP" autocomplete="off" class="layui-input" value="@(m_sIP)" />
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label" title="呼叫中心登录名">呼叫中心登录名</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="m_sLoginName" autocomplete="off" class="layui-input" value="@(Request.Cookies["ua"]?["m_sLoginName"]?.ToString())" />
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label" title="续联号码绑定">续联号码绑定</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="m_sBindNumber" autocomplete="off" class="layui-input" value="@(Request.Cookies["ua"]?["m_sBindNumber"]?.ToString())" />
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <div class="layui-input-block">
+                        <button class="layui-btn" lay-submit lay-filter="formSumit" id="formSumit">立即提交</button>
+                        <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="layui-card-body">
+            <div class="layui-hide" id="defaultTable" lay-filter="defaultTable"></div>
+        </div>
+    </div>
+    <script src="../layui/layui.js"></script>
+    <script>
+        layui.config({
+            base: '@Url.Content("~/layui/modules/")'
+        }).use(['element', 'form', 'table', 'layer', 'core'], function () {
+            var $ = layui.jquery,
+                element = layui.element,
+                core = layui.core,
+                layer = layui.layer,
+                form = layui.form,
+                table = layui.table;
+
+            //表单提交
+            form.on('submit(formSumit)', function (data) {
+                core.req({
+                    that: $('#formSumit'),
+                    url: '@Url.Content("~/Home/F_12LOGIN")',
+                    data: {
+                        queryString: core.queryString()
+                    }
+                });
+                return false;
+            });
+        });
+    </script>
+</body>
+</html>

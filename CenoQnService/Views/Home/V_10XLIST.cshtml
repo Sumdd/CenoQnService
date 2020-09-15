@@ -51,6 +51,12 @@
                         <input type="text" name="hostNum" autocomplete="off" class="layui-input" />
                     </div>
                 </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label" title="坐席ID">坐席ID</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="username" autocomplete="off" class="layui-input" value="@(Request.Cookies["ua"]?["agentId"]?.ToString())" />
+                    </div>
+                </div>
             </form>
         </div>
         <div class="layui-card-body">

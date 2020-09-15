@@ -1424,7 +1424,6 @@ namespace CenoQnService.Controllers
        T0.Shfzh as [cid],
        T0.Xm,
        T0.Ywy,
-       [username],
        [tag],
        [extendColumn],
        [serialNO],
@@ -1433,7 +1432,7 @@ namespace CenoQnService.Controllers
                 qop.FromSqlPart = $@"FROM [dbo].[call_repair_list]
 OUTER APPLY 
 (
-    SELECT TOP 1 * FROM call_repair_info
+    SELECT TOP 1 call_repair_info.* FROM call_repair_info
     WHERE call_repair_list.requestID = call_repair_info.requestID
     AND call_repair_list.sno = call_repair_info.sno
 ) T0
@@ -1452,6 +1451,8 @@ WHERE ISNULL(call_repair_list.IsDel,0) = 0
                 qop.setQuery("Ywy", "Ywy");
                 ///匿号
                 qop.setQuery("hostNum", "hostNum");
+                ///坐席ID
+                qop.setQuery("T0.username", "username");
                 ///查询
                 IList list = qop.QiList();
                 status = 0;
@@ -1709,6 +1710,105 @@ WHERE ISNULL(call_repair_list.IsDel,0) = 0
                 return eJson(m_cXxCfg.entID);
             }
         }
+        #endregion
+
+        #region ***本数据库验证登录
+        public ActionResult V_12LOGIN(string queryString)
+        {
+            ViewBag.Title = "坐席登录接口";
+            ViewBag.queryString = HttpUtility.UrlEncode(queryString);
+            return View();
+        }
+        public JsonResult F_12LOGIN(string queryString)
+        {
+            try
+            {
+                ///获取续联结果名单URL
+                string url = $"{m_cCcCfg.QN_API_URL}/agent/user/login";
+                List<m_cQuery> m_lQueryList = m_cQuery.m_fSetQueryList(queryString);
+                ///entID企业编号
+                string entID = m_cQuery.m_fGetQueryString(m_lQueryList, "entID");
+                if (string.IsNullOrWhiteSpace(entID))
+                    entID = m_cCcCfg.entID;
+                ///entSecret企业安全码
+                string entSecret = m_cQuery.m_fGetQueryString(m_lQueryList, "entSecret");
+                if (string.IsNullOrWhiteSpace(entSecret))
+                    entSecret = m_cCcCfg.entSecret;
+                ///requestID非空
+                string requestID = m_cQuery.m_fGetQueryString(m_lQueryList, "requestID");
+                if (string.IsNullOrWhiteSpace(requestID))
+                    requestID = m_cCmn.UUID(entID);
+                ///坐席ID非空
+                string agentId = m_cQuery.m_fGetQueryString(m_lQueryList, "agentId");
+                if (string.IsNullOrWhiteSpace(agentId))
+                    throw new ArgumentNullException("agentId");
+                ///密码非空
+                string passWord = m_cQuery.m_fGetQueryString(m_lQueryList, "passWord");
+                if (string.IsNullOrWhiteSpace(passWord))
+                    throw new ArgumentNullException("passWord");
+                ///dn修正
+                string dn = m_cQuery.m_fGetQueryString(m_lQueryList, "dn");
+                ///呼叫中心IP
+                string m_sIP = m_cQuery.m_fGetQueryString(m_lQueryList, "m_sIP");
+                ///呼叫中心登录名
+                string m_sLoginName = m_cQuery.m_fGetQueryString(m_lQueryList, "m_sLoginName");
+                ///续联号码绑定
+                string m_sBindNumber = m_cQuery.m_fGetQueryString(m_lQueryList, "m_sBindNumber");
+
+                ///查询本地数据库密码是否正确
+                bool m_bValid = m_cSQL.m_fLogin(agentId, passWord, out passWord);
+                if (!m_bValid) throw new Exception("用户名或密码错误");
+
+                ///参数构造
+                IDictionary<object, object> m_pDic = new Dictionary<object, object>();
+                m_pDic["entID"] = entID;
+                m_pDic["entSecret"] = entSecret;
+                m_pDic["requestID"] = requestID;
+                m_pDic["agentId"] = agentId;
+                m_pDic["passWord"] = passWord;
+                m_pDic["dn"] = dn;
+
+                ///发送请求
+                string m_sResultString = m_cHttp.m_fPost(url, m_pDic);
+                if (!string.IsNullOrWhiteSpace(m_sResultString))
+                {
+                    JObject m_pJObject = JObject.Parse(m_sResultString);
+                    status = Convert.ToInt32(m_pJObject["code"]);
+                    msg = m_pJObject["msg"].ToString();
+
+                    ///保存登录用户
+                    Response.Cookies["ua"]["agentId"] = agentId;
+                    Response.Cookies["ua"]["m_sIP"] = m_sIP;
+                    Response.Cookies["ua"]["m_sLoginName"] = m_sLoginName;
+                    Response.Cookies["ua"]["m_sBindNumber"] = m_sBindNumber;
+                    Response.Cookies["ua"].Expires = DateTime.Now.AddDays(1);
+
+                    return rJson(m_cCcCfg.entID);
+                }
+                else
+                {
+                    msg = "请求无返回";
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Instance.Debug(ex);
+                msg = ex.Message;
+            }
+            return eJson(m_cCcCfg.entID);
+        }
+        #endregion
+
+        #region ***本数据库密码修改
+
+        #endregion
+
+        #region ***本数据库续联统计
+
+        #endregion
+
+        #region ***本数据库明细统计
+
         #endregion
 
         #region ***JSON字符串封装返回
