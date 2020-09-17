@@ -227,5 +227,51 @@ ORDER BY username ASC;
                 return _m_sAgentID;
             }
         }
+
+        private static List<string> _m_lAgentID;
+        public static List<string> m_lAgentID
+        {
+            get
+            {
+                try
+                {
+                    if (_m_sAgentID == null)
+                    {
+                        string m_sSQL = $@"
+SELECT
+    username
+FROM call_repair_user WITH (NOLOCK)
+ORDER BY username ASC;
+";
+                        SqlSugarClient m_pEsyClient = new m_cSugar().EasyClient;
+                        DataTable m_pDataTable = m_pEsyClient.Ado.GetDataTable(m_sSQL);
+                        if (m_pDataTable != null && m_pDataTable.Rows.Count > 0)
+                        {
+                            _m_lAgentID = m_pDataTable.AsEnumerable().Select(x => x.Field<object>("username")?.ToString())?.ToList();
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Instance.Debug($"[CenoQnService][m_cSQL][m_lAgentID][Exception][{ex.Message}]");
+                }
+                return _m_lAgentID;
+            }
+        }
+        public static bool m_bHasAgentID(string m_aAgentID)
+        {
+            try
+            {
+                if (_m_lAgentID != null && _m_lAgentID.Count > 0 && _m_lAgentID.Contains(m_aAgentID))
+                {
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Instance.Debug($"[CenoQnService][m_cSQL][m_bHasAgentID][Exception][{ex.Message}]");
+            }
+            return false;
+        }
     }
 }

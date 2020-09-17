@@ -268,6 +268,10 @@ namespace CenoQnService.Controllers
                         {
                             throw new Exception("信修提交前需设置信修坐席ID");
                         }
+                        if (!m_cSQL.m_bHasAgentID(username))
+                        {
+                            throw new Exception("信修坐席ID不存在");
+                        }
                         item["username"] = username;
                     }
 
