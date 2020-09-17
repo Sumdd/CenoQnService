@@ -248,11 +248,11 @@ namespace CenoQnService.Controllers
                 ///默认赋值ua
                 string username = ua == "" ? null : ua;
                 ///是否使用默认坐席
-                string m_sAgentID = System.Configuration.ConfigurationManager.AppSettings["username"];
                 bool m_uUseDefAgentID = System.Configuration.ConfigurationManager.AppSettings["m_uUseDefAgentID"] == "1";
                 if (string.IsNullOrWhiteSpace(username) && m_uUseDefAgentID)
                 {
-                    username = m_sAgentID;
+                    ///查询出默认坐席,以便后续使用
+                    username = m_cSQL.m_sAgentID;
                 }
 
                 ///默认唯一标识

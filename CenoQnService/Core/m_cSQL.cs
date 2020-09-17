@@ -196,5 +196,36 @@ WHERE username = @username
             }
             return false;
         }
+
+        private static string _m_sAgentID;
+        public static string m_sAgentID
+        {
+            get
+            {
+                try
+                {
+                    if (_m_sAgentID == null)
+                    {
+                        string m_sSQL = $@"
+SELECT TOP 1
+    username
+FROM call_repair_user WITH (NOLOCK)
+ORDER BY username ASC;
+";
+                        SqlSugarClient m_pEsyClient = new m_cSugar().EasyClient;
+                        DataTable m_pDataTable = m_pEsyClient.Ado.GetDataTable(m_sSQL);
+                        if (m_pDataTable != null && m_pDataTable.Rows.Count > 0)
+                        {
+                            _m_sAgentID = m_pDataTable.Rows[0]["username"].ToString();
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Instance.Debug($"[CenoQnService][m_cSQL][m_sAgentID][Exception][{ex.Message}]");
+                }
+                return _m_sAgentID;
+            }
+        }
     }
 }
