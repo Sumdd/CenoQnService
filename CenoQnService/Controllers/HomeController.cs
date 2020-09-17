@@ -220,107 +220,6 @@ namespace CenoQnService.Controllers
                 if (string.IsNullOrWhiteSpace(file))
                     throw new ArgumentNullException("file");
 
-                #region 
-                /////参数构造
-                //IDictionary<object, object> m_pDic = new Dictionary<object, object>();
-                //m_pDic["entID"] = entID;
-                //m_pDic["entSecret"] = entSecret;
-                //m_pDic["requestID"] = requestID;
-                //m_pDic["subId"] = subId;
-
-                //#region ***Gzip压缩算法
-                /////手动构建CSV文件,将其直接和可视化连用
-                //List<m_cFile> m_lRecords = JsonConvert.DeserializeObject<List<m_cFile>>(file);
-
-                //if (m_lRecords == null)
-                //    throw new Exception("无数据");
-                //if (m_lRecords == null)
-                //    throw new Exception("数据最多1000行");
-                //if (m_lRecords == null)
-                //    throw new Exception("无数据");
-
-                //string username = null;
-                /////默认一个登录名
-                //int i = 0;
-                ///// 自动MD5
-                //foreach (m_cFile item in m_lRecords)
-                //{
-                //    if (string.IsNullOrWhiteSpace(item.sno))
-                //        item.sno = (++i).ToString();
-                //    item.cid = m_cDigest.m_fMD5(item.cid);
-                //    if (string.IsNullOrWhiteSpace(item.username))
-                //    {
-                //        if (username == null)
-                //        {
-                //            username = System.Configuration.ConfigurationManager.AppSettings["username"]?.ToString();
-                //            if (string.IsNullOrWhiteSpace(username))
-                //            {
-                //                throw new ArgumentNullException("配置默认账号");
-                //            }
-                //        }
-                //        item.username = username;
-                //    }
-                //}
-
-                /////构建数据表
-                //DataTable dt = new DataTable();
-                //dt.Columns.Add("sno", typeof(string));
-                /////判断列
-                //if (!dt.Columns.Contains("sno"))
-                //    throw new Exception("Sheet1中无sno列");
-                //if (!dt.Columns.Contains("cid"))
-                //    throw new Exception("Sheet1中无cid列");
-                //if (!dt.Columns.Contains("username"))
-                //    throw new Exception("Sheet1中无username列");
-                //if (!dt.Columns.Contains("Xm"))
-                //    throw new Exception("Sheet1中无Xm列");
-                //if (!dt.Columns.Contains("Ywy"))
-                //    throw new Exception("Sheet1中无Ywy列");
-                /////增加MD5身份证列
-                //dt.Columns.Add("MD5Shfzh", typeof(string));
-
-                /////压缩
-                //byte[] m_lByte;
-                //using (MemoryStream ms = new MemoryStream())
-                //using (StreamWriter writer = new StreamWriter(ms))
-                //using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
-                //{
-                //    csv.WriteRecords(m_lRecords.Select(x => { return new { sno = x.sno, cid = x.cid, username = x.username }; }));
-                //    writer.Flush();
-                //    m_lByte = ms.ToArray();
-                //}
-
-                /////写入压缩
-                //MemoryStream zipMs = new MemoryStream();
-                //GZipStream compressedStream = new GZipStream(zipMs, CompressionMode.Compress, true);
-                //compressedStream.Write(m_lByte, 0, m_lByte.Length);
-                //compressedStream.Flush();
-                //compressedStream.Close();
-                //#endregion
-
-                /////发送请求
-                //string m_sResultString = m_cHttp.m_fPost(url, m_pDic, zipMs.ToArray());
-
-                /////需要将结果写入数据库,这里催收系统交付即可
-                //if (!string.IsNullOrWhiteSpace(m_sResultString))
-                //{
-                //    JObject m_pJObject = JObject.Parse(m_sResultString);
-                //    status = Convert.ToInt32(m_pJObject["code"]);
-                //    msg = m_pJObject["msg"].ToString();
-                //    data = new
-                //    {
-                //        requestID = requestID,
-                //        file = (hasJson ? file : string.Empty)
-                //    };
-                //    return rJson(m_cXxCfg.entID);
-                //}
-                //else
-                //{
-                //    msg = "请求无返回";
-                //    return eJson(m_cXxCfg.entID);
-                //}
-                #endregion
-
                 ///参数构造
                 IDictionary<object, object> m_pDic = new Dictionary<object, object>();
                 m_pDic["entID"] = entID;
@@ -348,6 +247,14 @@ namespace CenoQnService.Controllers
 
                 ///默认赋值ua
                 string username = ua == "" ? null : ua;
+                ///是否使用默认坐席
+                string m_sAgentID = System.Configuration.ConfigurationManager.AppSettings["username"];
+                bool m_uUseDefAgentID = System.Configuration.ConfigurationManager.AppSettings["m_uUseDefAgentID"] == "1";
+                if (string.IsNullOrWhiteSpace(username) && m_uUseDefAgentID)
+                {
+                    username = m_sAgentID;
+                }
+
                 ///默认唯一标识
                 int j = 0;
                 /// 自动MD5
@@ -357,13 +264,9 @@ namespace CenoQnService.Controllers
                         item["sno"] = (++j).ToString();
                     if (string.IsNullOrWhiteSpace(item.Value<string>("username")))
                     {
-                        if (username == null)
+                        if (string.IsNullOrWhiteSpace(username))
                         {
-                            username = System.Configuration.ConfigurationManager.AppSettings["username"]?.ToString();
-                            if (string.IsNullOrWhiteSpace(username))
-                            {
-                                throw new ArgumentNullException("配置默认账号");
-                            }
+                            throw new Exception("信修提交前需设置信修坐席ID");
                         }
                         item["username"] = username;
                     }
