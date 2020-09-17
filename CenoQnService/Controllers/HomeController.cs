@@ -1424,6 +1424,7 @@ namespace CenoQnService.Controllers
        T0.Shfzh as [cid],
        T0.Xm,
        T0.Ywy,
+       T0.username,
        [tag],
        [extendColumn],
        [serialNO],
