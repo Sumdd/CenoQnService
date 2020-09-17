@@ -260,19 +260,22 @@ namespace CenoQnService.Controllers
                 /// 自动MD5
                 foreach (JToken item in m_pJArray)
                 {
+                    ///自定义编号
                     if (string.IsNullOrWhiteSpace(item.Value<string>("sno")))
                         item["sno"] = (++j).ToString();
+                    ///坐席ID判断
                     if (string.IsNullOrWhiteSpace(item.Value<string>("username")))
                     {
                         if (string.IsNullOrWhiteSpace(username))
                         {
                             throw new Exception("信修提交前需设置信修坐席ID");
                         }
-                        if (!m_cSQL.m_bHasAgentID(username))
-                        {
-                            throw new Exception("信修坐席ID不存在");
-                        }
                         item["username"] = username;
+                    }
+                    ///判断信修是否在本数据库中存在
+                    if (!m_cSQL.m_bHasAgentID(item["username"].ToString()))
+                    {
+                        throw new Exception("信修坐席ID不存在");
                     }
 
                     ///数据表

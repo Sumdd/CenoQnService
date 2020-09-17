@@ -262,6 +262,10 @@ ORDER BY username ASC;
         {
             try
             {
+                if (_m_lAgentID == null)
+                {
+                    _m_lAgentID = m_lAgentID;
+                }
                 if (_m_lAgentID != null && _m_lAgentID.Count > 0 && _m_lAgentID.Contains(m_aAgentID))
                 {
                     return true;
