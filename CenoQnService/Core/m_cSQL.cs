@@ -235,7 +235,7 @@ ORDER BY username ASC;
             {
                 try
                 {
-                    if (_m_sAgentID == null)
+                    if (_m_lAgentID == null)
                     {
                         string m_sSQL = $@"
 SELECT
