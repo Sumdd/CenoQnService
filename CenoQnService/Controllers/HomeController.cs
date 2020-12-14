@@ -736,6 +736,9 @@ namespace CenoQnService.Controllers
                 m_pDic["dpsEventUrl"] = dpsEventUrl;
                 m_pDic["dpsDetailUrl"] = dpsDetailUrl;
 
+                ///追加录音ID
+                string sessionId = null;
+
                 ///发送请求
                 string m_sResultString = m_cHttp.m_fPost(url, m_pDic);
                 if (!string.IsNullOrWhiteSpace(m_sResultString))
@@ -763,19 +766,40 @@ namespace CenoQnService.Controllers
                                 JObject m_pJExt = JObject.Parse(ext);
                                 if (m_pJExt.ContainsKey("sessionId"))
                                 {
+                                    sessionId = m_pJExt["sessionId"].ToString();
                                     ///把sessionId直接存入,待后续查询通话记录
-                                    m_cSQL.m_fSaveRecord(m_pJExt["sessionId"].ToString());
+                                    m_cSQL.m_fSaveRecord(sessionId);
                                 }
                             }
                         }
                     }
 
                     msg = m_pJObject["msg"].ToString();
-                    ///返回分支
+                    ///返回分支,追加不影响原逻辑的录音ID
                     if (useUa)
-                        return rJson();
+                    {
+                        return Json(new
+                        {
+                            status = status,
+                            msg = msg,
+                            count = count,
+                            data = data,
+                            uuid = m_cCmn.UUID(null),
+                            sessionId = sessionId
+                        });
+                    }
                     else
-                        return rJson(m_cCcCfg.entID);
+                    {
+                        return Json(new
+                        {
+                            status = status,
+                            msg = msg,
+                            count = count,
+                            data = data,
+                            uuid = m_cCmn.UUID(entID),
+                            sessionId = sessionId
+                        });
+                    }
                 }
                 else
                 {
