@@ -46,5 +46,16 @@ namespace CenoQnService
                 return $"{m_cCcCfg.entID}{DateTime.Now.ToString(m_cCfg.DATE_PATTERN)}{Guid.NewGuid().ToString().Substring(0, 3)}";
             }
         }
+        /// <summary>
+        /// 上个月的最后一天时分秒
+        /// </summary>
+        public static string m_fBLastDay
+        {
+            get
+            {
+                DateTime m_pDateTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+                return m_pDateTime.AddDays(-1).ToString("yyyy-MM-dd 23:59:59");
+            }
+        }
     }
 }

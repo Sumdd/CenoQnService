@@ -67,7 +67,7 @@ namespace CenoQnService
             }
             catch (Exception ex)
             {
-                Log.Instance.Error($"[CenoQnService][m_cGcfg][m_fGetAppSetting][Exception][键:{m_sKey},Get时错误:{ex.Message}]");
+                Log.Instance.Debug($"[CenoQnService][m_cGcfg][m_fGetAppSetting][Exception][键:{m_sKey},Get时错误:{ex.Message}]");
                 return string.Empty;
             }
         }

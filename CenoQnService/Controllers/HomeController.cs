@@ -739,6 +739,11 @@ namespace CenoQnService.Controllers
                 ///追加录音ID
                 string sessionId = null;
 
+                ///记录拨打者IP
+                string m_sHost = Request.UserHostAddress;
+                ///保存录音
+                m_cSQL.m_fSetDialRecord(number, m_sHost);
+
                 ///发送请求
                 string m_sResultString = m_cHttp.m_fPost(url, m_pDic);
                 if (!string.IsNullOrWhiteSpace(m_sResultString))
@@ -877,6 +882,13 @@ namespace CenoQnService.Controllers
                 m_pDic["dpsEventUrl"] = dpsEventUrl;
                 m_pDic["dpsDetailUrl"] = dpsDetailUrl;
 
+                ///追加录音ID
+                string sessionId = null;
+                ///记录拨打者IP
+                string m_sHost = Request.UserHostAddress;
+                ///保存录音
+                m_cSQL.m_fSetDialRecord(number, m_sHost);
+
                 ///发送请求
                 string m_sResultString = m_cHttp.m_fPost(url, m_pDic);
                 if (!string.IsNullOrWhiteSpace(m_sResultString))
@@ -904,6 +916,7 @@ namespace CenoQnService.Controllers
                                 JObject m_pJExt = JObject.Parse(ext);
                                 if (m_pJExt.ContainsKey("sessionId"))
                                 {
+                                    sessionId = m_pJExt["sessionId"].ToString();
                                     ///把sessionId直接存入,待后续查询通话记录
                                     m_cSQL.m_fSaveRecord(m_pJExt["sessionId"].ToString());
                                 }
@@ -912,7 +925,16 @@ namespace CenoQnService.Controllers
                     }
 
                     msg = m_pJObject["msg"].ToString();
-                    return rJson(m_cCcCfg.entID);
+                    ///返回分支,追加不影响原逻辑的录音ID
+                    return Json(new
+                    {
+                        status = status,
+                        msg = msg,
+                        count = count,
+                        data = data,
+                        uuid = m_cCmn.UUID(entID),
+                        sessionId = sessionId
+                    });
                 }
                 else
                 {
@@ -1369,15 +1391,39 @@ namespace CenoQnService.Controllers
        [extendColumn],
        [serialNO],
        [hostNum],
-       call_repair_list.[requestID]";
-                qop.FromSqlPart = $@"FROM [dbo].[call_repair_list]
-OUTER APPLY 
+       call_repair_list.[requestID],
+       ISNULL(T1.WorkCount, 0) AS WorkCount,
+       CONVERT(VARCHAR(20), T1.LastWorkTime, 20) AS LastWorkTime,
+       ISNULL(T2.DialCount, 0) AS DialCount,
+       CONVERT(VARCHAR(20), T2.LastDialTime, 20) AS LastDialTime";
+                qop.FromSqlPart = $@"FROM [dbo].[call_repair_list] WITH (NOLOCK)
+    OUTER APPLY
 (
-    SELECT TOP 1 call_repair_info.* FROM call_repair_info
+    SELECT TOP 1
+        call_repair_info.*
+    FROM call_repair_info
     WHERE call_repair_list.requestID = call_repair_info.requestID
-    AND call_repair_list.sno = call_repair_info.sno
+          AND ISNULL(call_repair_info.IsDel, 0) = 0
+          AND call_repair_list.sno = call_repair_info.sno
 ) T0
-";
+    OUTER APPLY
+(
+    SELECT COUNT(1) AS WorkCount,
+           MAX(call_repair_dial.dialtime) AS LastWorkTime
+    FROM call_repair_dial WITH (NOLOCK)
+    WHERE call_repair_dial.dialno = call_repair_list.serialNO
+          AND ISNULL(call_repair_dial.IsDel, 0) = 0
+    GROUP BY call_repair_dial.dialno
+) T1
+    OUTER APPLY
+(
+    SELECT COUNT(1) AS DialCount,
+           MAX(call_repair_record.startTime) AS LastDialTime
+    FROM call_repair_record WITH (NOLOCK)
+    WHERE call_repair_record.dnis = call_repair_list.serialNO
+          AND ISNULL(call_repair_record.IsDel, 0) = 0
+    GROUP BY call_repair_record.dnis
+) T2";
                 qop.WhereSqlPart = $@"
 WHERE ISNULL(call_repair_list.IsDel,0) = 0
 ";
@@ -1745,11 +1791,231 @@ WHERE ISNULL(call_repair_list.IsDel,0) = 0
         #endregion
 
         #region ***本数据库续联统计
+        public ActionResult V_13XP(string queryString)
+        {
+            ViewBag.Title = "续联报表";
+            ViewBag.queryString = HttpUtility.UrlEncode(queryString);
+            return View();
+        }
 
+        public JsonResult F_13XP(Pager pager, string queryString)
+        {
+            try
+            {
+                QueryPager qop = new QueryPager();
+                qop.pager = pager;
+                qop.queryString = queryString;
+                qop.FieldsSqlPart = $@"SELECT *";
+                qop.FromSqlPart = $@"FROM
+(
+    SELECT ISNULL(T1.ResqCount, 0) AS ResqCount,
+           ISNULL(T2.RespCount, 0) AS RespCount,
+           ISNULL(T2.EffectCount, 0) AS EffectCount,
+           call_repair.Id,
+           CONVERT(VARCHAR(20), call_repair.AddTime, 20) AddTime,
+           CONVERT(VARCHAR(20), call_repair.UpdateTime, 20) UpdateTime,
+           call_repair.RequestID AS requestID,
+           call_repair.RespState,
+           call_repair.RespMsg
+    FROM call_repair WITH (NOLOCK)
+        OUTER APPLY
+    (
+        SELECT COUNT(1) AS ResqCount
+        FROM call_repair_info WITH (NOLOCK)
+        WHERE call_repair_info.requestID = call_repair.RequestID
+              AND ISNULL(call_repair_info.IsDel, 0) = 0
+    ) T1
+        OUTER APPLY
+    (
+        SELECT COUNT(1) AS RespCount,
+               SUM(   CASE
+                          WHEN ISNULL(call_repair_list.serialNO, '') != '' THEN
+                              1
+                          ELSE
+                              0
+                      END
+                  ) AS EffectCount
+        FROM call_repair_list WITH (NOLOCK)
+        WHERE call_repair_list.requestID = call_repair.RequestID
+              AND ISNULL(call_repair_list.IsDel, 0) = 0
+    ) T2
+    WHERE ISNULL(call_repair.IsDel, 0) = 0
+) T0";
+                ///请求编号
+                qop.setQuery("requestID", "requestID");
+                ///添加时间起
+                qop.setQuery("AddTime", "AddTimeStart");
+                ///添加时间止
+                qop.setQuery("AddTime", "AddTimeEnd");
+                ///响应信息
+                qop.setQuery("RespMsg", "RespMsg");
+                ///页脚语句
+                qop.SumSqlPart = "SUM(ResqCount) AS ResqCount,SUM(RespCount) AS RespCount,SUM(EffectCount) AS EffectCount";
+                ///查询
+                IList list = qop.QiList();
+                status = 0;
+                msg = "成功";
+                count = qop.count;
+                data = list;
+                ///返回拼接
+                return Json(new
+                {
+                    status = status,
+                    msg = msg,
+                    count = count,
+                    data = data,
+                    totalRow = qop.totalRow
+                });
+            }
+            catch (Exception ex)
+            {
+                Log.Instance.Debug(ex);
+                msg = ex.Message;
+            }
+            return eJson(m_cCcCfg.entID);
+        }
         #endregion
 
         #region ***本数据库明细统计
+        public ActionResult V_13DPSP(string queryString)
+        {
+            ViewBag.Title = "明细统计";
+            ViewBag.queryString = HttpUtility.UrlEncode(queryString);
+            return View();
+        }
 
+        public JsonResult F_13DPSP(Pager pager, string queryString)
+        {
+            try
+            {
+                QueryPager qop = new QueryPager();
+                qop.pager = pager;
+                qop.queryString = queryString;
+                qop.FieldsSqlPart = $@"SELECT *";
+                qop.FromSqlPart = $@"FROM
+(
+    SELECT (CASE
+                WHEN ISNULL(call_repair_record.auto_status, 0) = 1 THEN
+                    '明细获取成功'
+                WHEN ISNULL(call_repair_record.auto_status, 0) = 2 THEN
+                    '明细获取失败'
+                WHEN ISNULL(call_repair_record.auto_status, 0) = 3 THEN
+                    '录音下载成功'
+                WHEN ISNULL(call_repair_record.auto_status, 0) = 4 THEN
+                    '录音无需下载'
+                WHEN ISNULL(call_repair_record.auto_status, 0) = 5 THEN
+                    '录音下载失败'
+                ELSE
+                    '未获取明细'
+            END
+           ) AS auto_status_msg,
+           (CASE
+                WHEN ISNULL(call_repair_record.callResult, 0) = 1 THEN
+                    '外呼成功'
+                WHEN ISNULL(call_repair_record.callResult, 0) = 2 THEN
+                    '外呼失败'
+                ELSE
+                    '-'
+            END
+           ) AS callResult_msg,
+           (CASE
+                WHEN ISNULL(call_repair_record.endType, 0) = 1 THEN
+                    '客户挂断'
+                WHEN ISNULL(call_repair_record.endType, 0) = 2 THEN
+                    '坐席挂断'
+                WHEN ISNULL(call_repair_record.endType, 0) = -1 THEN
+                    '未知'
+                ELSE
+                    '-'
+            END
+           ) AS endType_msg,
+           call_repair_record.sessionId,
+           call_repair_record.username,
+           call_repair_record.userData,
+           call_repair_record.ani,
+           call_repair_record.dnis,
+           call_repair_record.dani,
+           call_repair_record.ddnis,
+           CONVERT(VARCHAR(20), call_repair_record.startTime, 20) startTime,
+           CONVERT(VARCHAR(20), call_repair_record.endTime, 20) endTime,
+           call_repair_record.callResult,
+           call_repair_record.alertDuration,
+           call_repair_record.talkDuration,
+           call_repair_record.endType,
+           call_repair_record.AddUserId,
+           CONVERT(VARCHAR(20), call_repair_record.AddTime, 20) AddTime,
+           call_repair_record.UpdateUserId,
+           CONVERT(VARCHAR(20), call_repair_record.UpdateTime, 20) UpdateTime,
+           call_repair_record.auto_status,
+           call_repair_record.auto_err
+    FROM call_repair_record WITH (NOLOCK)
+    WHERE ISNULL(call_repair_record.IsDel, 0) = 0
+) AS T0";
+                ///会话ID
+                qop.setQuery("sessionId", "sessionId");
+                ///随路信令
+                qop.setQuery("userData", "userData");
+                ///坐席ID
+                qop.setQuery("username", "agentId");
+                ///主叫号码
+                qop.setQuery("ani", "ani");
+                ///被叫号码
+                qop.setQuery("dnis", "dnis");
+                ///主叫外显号码
+                qop.setQuery("dani", "dani");
+                ///被叫外显号码
+                qop.setQuery("ddnis", "ddnis");
+                ///通话开始时间起
+                qop.setQuery("startTime", "startTimeStart");
+                ///通话开始时间止
+                qop.setQuery("startTime", "startTimeEnd");
+                ///通话结束时间起
+                qop.setQuery("endTime", "endTimeStart");
+                ///通话结束时间止
+                qop.setQuery("endTime", "endTimeEnd");
+                ///外呼结果
+                qop.setQuery("callResult", "callResult");
+                ///振铃时长起
+                qop.setQuery("alertDuration", "alertDurationStart");
+                ///振铃时长止
+                qop.setQuery("alertDuration", "alertDurationEnd");
+                ///通话时长起
+                qop.setQuery("talkDuration", "talkDurationStart");
+                ///通话时长止
+                qop.setQuery("talkDuration", "talkDurationEnd");
+                ///挂断类型
+                qop.setQuery("endType", "endType");
+                ///添加时间起
+                qop.setQuery("AddTime", "AddTimeStart");
+                ///添加时间止
+                qop.setQuery("AddTime", "AddTimeEnd");
+                ///获取结果
+                qop.setQuery("auto_status", "auto_status");
+                ///页脚语句
+                qop.SumSqlPart = "SUM(alertDuration) AS alertDuration,SUM(talkDuration) AS talkDuration";
+                ///查询
+                IList list = qop.QiList();
+                status = 0;
+                msg = "成功";
+                count = qop.count;
+                data = list;
+                ///返回拼接
+                return Json(new
+                {
+                    status = status,
+                    msg = msg,
+                    count = count,
+                    data = data,
+                    totalRow = qop.totalRow
+                });
+            }
+            catch (Exception ex)
+            {
+                Log.Instance.Debug(ex);
+                msg = ex.Message;
+            }
+            return eJson(m_cCcCfg.entID);
+        }
         #endregion
 
         #region ***JSON字符串封装返回

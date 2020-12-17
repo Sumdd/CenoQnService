@@ -4,7 +4,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>@ViewBag.Title</title>
-    <link href="../layui/css/layui.css" rel="stylesheet" />
+    <link href="@Url.Content("~/layui/css/layui.css")" rel="stylesheet" />
 </head>
 <body>
     <div class="layui-header">
@@ -63,7 +63,7 @@
             <div class="layui-hide" id="defaultTable" lay-filter="defaultTable"></div>
         </div>
     </div>
-    <script src="../layui/layui.js"></script>
+    <script src="@Url.Content("~/layui/layui.js")"></script>
     <script>
         layui.config({
             base: '@Url.Content("~/layui/modules/")'
@@ -88,22 +88,21 @@
                 page: true,
                 even: true,
                 autoSort: true,
-                cellMinWidth: 80,
                 cols: [[
                     { type: 'numbers', fixed: 'left' },
                     { type: 'checkbox', fixed: 'left' },
-                    { field: 'requestID', title: '请求编号', sort: true },
-                    { field: 'sno', title: '数据唯一标识', sort: true },
+                    { field: 'requestID', title: '请求编号', width: 215, sort: true },
+                    { field: 'sno', title: '数据唯一标识', width: 125, sort: true },
                     //{ field: 'tag', title: '标签', sort: true },
-                    { field: 'Xm', title: '姓名', sort: true },
-                    { field: 'cid', title: '身份证', sort: true },
-                    { field: 'Ywy', title: '业务员', sort: true },
+                    { field: 'Xm', title: '姓名', width: 70, sort: true },
+                    { field: 'cid', title: '身份证', width: 160, sort: true },
+                    { field: 'Ywy', title: '业务员', width: 120, sort: true },
                     //{ field: 'username', title: '坐席ID', sort: true },
                     //{ field: 'extendColumn', title: '扩展字段', sort: true },
-                    { field: 'serialNO', title: '外拨流水号', sort: true },
-                    { field: 'hostNum', title: '匿号', sort: true },
+                    { field: 'serialNO', title: '外拨流水号', width: 325, sort: true },
+                    { field: 'hostNum', title: '匿号', width: 100, sort: true },
                     {
-                        field: 'op', title: '操作', templet: function (d) {
+                        field: 'op', title: '操作', width: 120, templet: function (d) {
                             if (d.serialNO) {
                                 var array =
                                     [
@@ -115,7 +114,11 @@
                                 return '';
                             }
                         }
-                    }
+                    },
+                    { field: 'WorkCount', title: '工作次数', width: 100, sort: true },
+                    { field: 'LastWorkTime', title: '最后工作时间', width: 145, sort: true },
+                    { field: 'DialCount', title: '拨打次数', width: 100, sort: true },
+                    { field: 'LastDialTime', title: '最后拨打时间', width: 145, sort: true }
                 ]]
             });
 

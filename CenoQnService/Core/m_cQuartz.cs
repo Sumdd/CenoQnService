@@ -259,6 +259,146 @@ WHERE [sessionId] IN ('{string.Join("','", m_pRecord.AsEnumerable().Select(x => 
                         Log.Instance.Debug($"[CenoQnService][m_cQuartzJob][Execute][无明细任务]");
                     }
                     #endregion
+
+                    #region ***录音下载
+                    try
+                    {
+                        DataTable m_pRecordDownload = m_cSQL.m_fQueryRecordDownload();
+
+                        if (m_pRecordDownload != null && m_pRecordDownload.Rows.Count > 0)
+                        {
+                            List<string> m_lUpd = new List<string>();
+
+                            foreach (DataRow m_pDataRow in m_pRecordDownload.Rows)
+                            {
+                                ///会话ID
+                                string sessionId = m_pDataRow["sessionId"].ToString();
+                                ///通话时长
+                                int talkDuration = Convert.ToInt32(m_pDataRow["sessionId"]);
+                                ///开始时间
+                                string startTime = m_pDataRow["startTime"].ToString();
+
+                                int status = -1;
+                                string msg = "";
+                                ///获取续联结果名单URL
+                                string url = $"{m_cCcCfg.QN_API_URL}/agent/audio/query";
+                                ///entID企业编号
+                                string entID = m_cXxCfg.entID;
+                                ///entSecret企业安全码
+                                string entSecret = m_cXxCfg.entSecret;
+                                ///requestID非空
+                                string requestID = m_cCmn.UUID(entID);
+                                ///参数构造
+                                IDictionary<object, object> m_pDic = new Dictionary<object, object>();
+                                m_pDic["entID"] = entID;
+                                m_pDic["entSecret"] = entSecret;
+                                m_pDic["requestID"] = requestID;
+                                m_pDic["sessionIds"] = sessionId;
+
+                                ///发送请求
+                                string m_sResultString = m_cHttp.m_fPost(url, m_pDic);
+                                if (!string.IsNullOrWhiteSpace(m_sResultString))
+                                {
+                                    JObject m_pJObject = JObject.Parse(m_sResultString);
+                                    status = Convert.ToInt32(m_pJObject["code"]);
+                                    msg = m_pJObject["msg"].ToString();
+                                    if (status == 0)
+                                    {
+                                        JToken m_pJToken = m_pJObject["data"];
+                                        foreach (JToken item in m_pJToken)
+                                        {
+                                            ///解析数据
+                                            string audioUrl = item["audioUrl"]?.ToString();
+                                            string audioType = item["audioType"]?.ToString();
+
+                                            ///是否下载成功
+                                            bool m_bRecLoad = false;
+                                            string m_sSavePuffixFileName = string.Empty;
+                                            #region ***直接下载录音并保存
+                                            try
+                                            {
+                                                using (System.IO.Stream m_pRecIDResult = m_cHttp.HttpGetStream(audioUrl))
+                                                {
+                                                    if (m_pRecIDResult != null)
+                                                    {
+                                                        m_pRecIDResult.Position = 0;
+                                                        //创建对应文件,改变文件名称,形如Rec_20200202;
+                                                        DateTime m_dtDateTime = Convert.ToDateTime(startTime);
+                                                        string m_sFileName = $"Rec_{m_dtDateTime.ToString("yyyyMMddHHmmss")}_{System.IO.Path.GetFileName(audioUrl)}";
+                                                        m_sSavePuffixFileName = $"/{m_dtDateTime.ToString("yyyy")}/{m_dtDateTime.ToString("yyyyMM")}/{m_dtDateTime.ToString("yyyyMMdd")}/{m_sFileName}";
+                                                        string m_sSavePath = $"{m_cSQL.m_sSaveRecordPath}{m_sSavePuffixFileName}";
+                                                        string m_sDirectory = System.IO.Path.GetDirectoryName(m_sSavePath);
+                                                        //判断文件是否存在
+                                                        if (!System.IO.File.Exists(m_sSavePath))
+                                                        {
+                                                            if (!System.IO.Directory.Exists(m_sDirectory)) System.IO.Directory.CreateDirectory(m_sDirectory);
+                                                            //将流写入文件
+                                                            using (var fileStream = System.IO.File.Create(m_sSavePath))
+                                                            {
+                                                                m_pRecIDResult.CopyTo(fileStream);
+                                                            }
+                                                            m_bRecLoad = true;
+                                                        }
+                                                        else msg = "录音文件已存在无需再次下载";
+                                                    }
+                                                    else msg = "下载流非空";
+                                                }
+                                            }
+                                            catch (Exception ex)
+                                            {
+                                                msg = $"录音下载错误:{ex.Message}";
+                                                Log.Instance.Debug($"[CenoQnService][m_cQuartzJob][Execute][RecLoad][for][Exception][{ex.Message}]");
+                                            }
+                                            #endregion
+
+                                            if (m_bRecLoad)
+                                            {
+                                                m_lUpd.Add($@"
+UPDATE [dbo].[call_repair_record]
+SET [UpdateUserId] = GETDATE(),
+    [auto_status] = 3,
+    [suffixAudio] = '{m_sSavePuffixFileName}' 
+WHERE [sessionId] = '{sessionId}';");
+                                            }
+                                            else
+                                            {
+                                                m_lUpd.Add($@"
+UPDATE [dbo].[call_repair_record]
+SET [UpdateUserId] = GETDATE(),
+    [auto_status] = 5,
+    [auto_err] = '{msg}'
+WHERE [sessionId] = '{sessionId}';");
+                                            }
+
+                                        }
+                                    }
+                                    else
+                                    {
+                                        m_lUpd.Add($@"
+UPDATE [dbo].[call_repair_record]
+SET [UpdateUserId] = GETDATE(),
+    [auto_status] = (CASE WHEN 0 <= 0 THEN 4 ELSE 5 END),
+    [auto_err] = '{msg}'
+WHERE [sessionId] = '{sessionId}';");
+                                    }
+                                }
+                                else
+                                {
+                                    m_lUpd.Add($@"
+UPDATE [dbo].[call_repair_record]
+SET [UpdateUserId] = GETDATE(),
+    [auto_status] = (CASE WHEN 0 <= 0 THEN 4 ELSE 5 END),
+    [auto_err] = (CASE WHEN 0 <= 0 THEN [auto_err] ELSE '请求无返回' END)
+WHERE [sessionId] = '{sessionId}';");
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Instance.Debug($"[CenoQnService][m_cQuartzJob][Execute][RecLoad][Exception][{ex.Message}]");
+                    }
+                    #endregion
                 }
                 catch (Exception ex)
                 {

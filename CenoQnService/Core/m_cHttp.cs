@@ -305,5 +305,41 @@ namespace CenoQnService
             return responseStr;
         }
         #endregion
+
+        #region ***下载内容
+        public static Stream HttpGetStream(string Url, string postDataStr = "")
+        {
+            try
+            {
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(Url + (postDataStr == "" ? "" : "?") + postDataStr);
+                request.Method = "GET";
+                request.ContentType = "text/html;charset=UTF-8";
+
+                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                Stream myResponseStream = response.GetResponseStream();
+
+                ///将流转换成内存流
+                var memoryStream = new MemoryStream();
+                //将基础流写入内存流
+                const int bufferLength = 1024;
+                byte[] buffer = new byte[bufferLength];
+                int actual = myResponseStream.Read(buffer, 0, bufferLength);
+                while (actual > 0)
+                {
+                    memoryStream.Write(buffer, 0, actual);
+                    actual = myResponseStream.Read(buffer, 0, bufferLength);
+                }
+                memoryStream.Position = 0;
+
+                myResponseStream.Close();
+
+                return memoryStream;
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+        #endregion
     }
 }
