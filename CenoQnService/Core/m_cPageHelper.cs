@@ -65,6 +65,7 @@ namespace CenoQnService
         public string SumSqlPart = string.Empty;
 
         public int count { get; set; } = 0;
+        public object totalRow { get; set; }
         public Pager pager
         {
             get; set;
@@ -328,8 +329,14 @@ namespace CenoQnService
             }
         }
         #endregion
-        public void SetSumSql()
+        public void SetSumSql(string m_sSUMSQL = null)
         {
+            if (m_sSUMSQL != null)
+            {
+                SumSql = m_sSUMSQL;
+                return;
+            }
+
             if (string.IsNullOrWhiteSpace(SumSqlPart))
                 return;
             SumSql = string.Format("SELECT {0}\r\n"
@@ -376,6 +383,24 @@ namespace CenoQnService
         {
             //返回查询到的数据结果集
             DataSet ds = QdataSet();
+
+            ///处理页脚的
+            if (ds.Tables.Count == 3)
+            {
+                DataTable m_pDataTable3 = ds.Tables[2].Copy();
+
+                if (m_pDataTable3 != null && m_pDataTable3.Rows.Count > 0)
+                {
+                    IDictionary<string, object> idi = new Dictionary<string, object>();
+                    for (int j = 0; j < m_pDataTable3.Columns.Count; j++)
+                    {
+                        idi.Add(new KeyValuePair<string, object>(m_pDataTable3.Columns[j].ColumnName, m_pDataTable3.Rows[0][j]));
+                    }
+                    totalRow = idi;
+                }
+                ds.Tables.RemoveAt(2);
+            }
+
             //处理成直接可用的数据
             if (ds.Tables.Count == 2)
             {

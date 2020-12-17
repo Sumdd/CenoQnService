@@ -277,5 +277,117 @@ ORDER BY username ASC;
             }
             return false;
         }
+
+        public static bool m_fSetDialRecord(string number, string m_sHost)
+        {
+            try
+            {
+                string m_sSQL = $@"
+INSERT INTO [dbo].[call_repair_dial]
+(
+    [dialno],
+    [dialtime],
+    [dialip]
+)
+VALUES
+(@number, GETDATE(), @m_sHost);
+";
+                SqlSugarClient m_pEsyClient = new m_cSugar().EasyClient;
+                int m_uCount = m_pEsyClient.Ado.ExecuteCommand(m_sSQL, new
+                {
+                    number = number,
+                    m_sHost = m_sHost
+                });
+                return m_uCount > 0;
+            }
+            catch (Exception ex)
+            {
+                Log.Instance.Debug($"[CenoQnService][m_cSQL][m_fSetDialRecord][Exception][{ex.Message}]");
+            }
+            return false;
+        }
+
+        public static DataTable m_fQueryRecordDownload()
+        {
+            try
+            {
+                ///保存路径非空
+                if (string.IsNullOrWhiteSpace(m_cSQL.m_sSaveRecordPath)) throw new Exception("录音保存路径非空");
+
+                string m_sSQL = $@"
+SELECT TOP 100
+    call_repair_record.sessionId,
+    call_repair_record.startTime,
+    call_repair_record.talkDuration
+FROM call_repair_record WITH (NOLOCK)
+WHERE 1 = 1
+      AND ISNULL(IsDel, 0) = 0
+      AND ISNULL(auto_status, 0) IN ( 1, 5 )
+      AND
+      (
+          UpdateTime <= '{DateTime.Now.AddMinutes(-10).ToString("yyyy-MM-dd HH:mm:ss")}'
+          OR UpdateTime IS NULL
+      );
+";
+                SqlSugarClient m_pEsyClient = new m_cSugar().EasyClient;
+                DataTable m_pDataTable = m_pEsyClient.Ado.GetDataTable(m_sSQL);
+                return m_pDataTable;
+            }
+            catch (Exception ex)
+            {
+                Log.Instance.Debug($"[CenoQnService][m_cSQL][m_fQueryRecordDownload][Exception][{ex.Message}]");
+            }
+            return null;
+        }
+
+        #region ***数据库参数
+
+        #region ***录音下载Http地址
+        private static string _m_sSaveRecordHttp;
+        public static string m_sSaveRecordHttp
+        {
+            get
+            {
+                if (_m_sSaveRecordHttp == null) _m_sSaveRecordHttp = m_cSQL.m_fGetPValue("m_sSaveRecordHttp");
+                return _m_sSaveRecordHttp;
+            }
+        }
+        #endregion
+
+        #region ***录音下载绝对路径
+        private static string _m_sSaveRecordPath;
+        public static string m_sSaveRecordPath
+        {
+            get
+            {
+                if (_m_sSaveRecordPath == null) _m_sSaveRecordPath = m_cSQL.m_fGetPValue("m_sSaveRecordPath");
+                return _m_sSaveRecordPath;
+            }
+        }
+        #endregion
+
+        #region ***参数获取方法
+        private static string m_fGetPValue(string m_sPCode)
+        {
+            try
+            {
+                string m_sSQL = $@"SELECT call_repair_p.pvalue
+FROM call_repair_p WITH (NOLOCK)
+WHERE call_repair_p.pcode = @m_sPCode;";
+                SqlSugarClient m_pEsyClient = new m_cSugar().EasyClient;
+                return m_pEsyClient.Ado.GetString(m_sSQL, new
+                {
+                    m_sPCode = m_sPCode
+                });
+            }
+            catch (Exception ex)
+            {
+                Log.Instance.Debug($"[CenoQnService][m_cSQL][m_fGetPValue][Exception][{ex.Message}]");
+            }
+            return null;
+        }
+        #endregion
+
+        #endregion
     }
 }

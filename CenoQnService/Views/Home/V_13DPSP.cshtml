@@ -1,0 +1,308 @@
+﻿<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>@ViewBag.Title</title>
+    <link href="@Url.Content("~/layui/css/layui.css")" rel="stylesheet" />
+    <style>
+        .layui-form-label {
+            width: 110px;
+        }
+
+        .layui-input-block {
+            margin-left: 140px;
+        }
+
+        .layui-select-title > input {
+            width: 182px;
+        }
+    </style>
+</head>
+<body>
+    <div class="layui-header">
+        <ul class="layui-nav layui-bg-green">
+            <li class="layui-nav-item">
+                <label>@ViewBag.Title</label>
+            </li>
+            @Html.Partial("~/Views/Home/P_NAV.cshtml")
+        </ul>
+    </div>
+    <div class="layui-card">
+        <div class="layui-card-header">
+            查询条件
+        </div>
+        <div class="layui-card-header layuiadmin-card-header-auto" id="defaultSp">
+            <form class="layui-form" lay-filter="defaultSearch">
+                <div class="layui-inline layui-hide">
+                    <label class="layui-form-label" title="会话ID">会话ID</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="sessionId" autocomplete="off" class="layui-input" />
+                    </div>
+                </div>
+                <div class="layui-inline layui-hide">
+                    <label class="layui-form-label" title="随路信令">随路信令</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="userData" autocomplete="off" class="layui-input" />
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label" title="坐席ID">坐席ID</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="agentId" autocomplete="off" class="layui-input" />
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label" title="主叫号码">主叫号码</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="ani" autocomplete="off" class="layui-input" />
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label" title="被叫号码">被叫号码</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="dnis" autocomplete="off" class="layui-input" />
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label" title="主叫外显号码">主叫外显号码</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="dani" autocomplete="off" class="layui-input" />
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label" title="被叫外显号码">被叫外显号码</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="ddnis" autocomplete="off" class="layui-input" />
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label" title="通话开始时间起">通话开始时间起</label>
+                    <div class="layui-input-block">
+                        <input type="hidden" name="startTimeStartMark" value=">=" />
+                        <input type="text" name="startTimeStart" autocomplete="off" class="layui-input datetimepicker" />
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label" title="通话开始时间止">通话开始时间止</label>
+                    <div class="layui-input-block">
+                        <input type="hidden" name="startTimeEndMark" value="<=" />
+                        <input type="text" name="startTimeEndEnd" autocomplete="off" class="layui-input datetimepicker" />
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label" title="通话结束时间起">通话结束时间起</label>
+                    <div class="layui-input-block">
+                        <input type="hidden" name="endTimeStartMark" value=">=" />
+                        <input type="text" name="endTimeStart" autocomplete="off" class="layui-input datetimepicker" />
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label" title="通话结束时间止">通话结束时间止</label>
+                    <div class="layui-input-block">
+                        <input type="hidden" name="endTimeEndMark" value="<=" />
+                        <input type="text" name="endTimeEnd" autocomplete="off" class="layui-input datetimepicker" />
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label" title="外呼结果">外呼结果</label>
+                    <div class="layui-input-block">
+                        <input type="hidden" name="callResultMark" value="=" />
+                        <select name="callResult">
+                            <option value=""></option>
+                            <option value="1">成功</option>
+                            <option value="2">失败</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label" 　title="振铃时长（秒）">振铃时长（秒）</label>
+                    <div class="layui-input-inline" style="width: 89px;">
+                        <input type="hidden" name="alertDurationStartMark" value=">=" />
+                        <input type="text" name="alertDurationStart" placeholder="秒" autocomplete="off" class="layui-input">
+                    </div>
+                    <div class="layui-input-inline" style="width: 89px;">
+                        <input type="hidden" name="alertDurationEndMark" value="<=" />
+                        <input type="text" name="alertDurationEnd" placeholder="秒" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label" 　title="通话时长（秒）">通话时长（秒）</label>
+                    <div class="layui-input-inline" style="width: 89px;">
+                        <input type="hidden" name="talkDurationStartMark" value=">=" />
+                        <input type="text" name="talkDurationStart" placeholder="秒" autocomplete="off" class="layui-input">
+                    </div>
+                    <div class="layui-input-inline" style="width: 89px;">
+                        <input type="hidden" name="talkDurationEndMark" value="<=" />
+                        <input type="text" name="talkDurationEnd" placeholder="秒" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label" title="挂断类型">挂断类型</label>
+                    <div class="layui-input-block">
+                        <input type="hidden" name="endTypeMark" value="=" />
+                        <select name="endType">
+                            <option value=""></option>
+                            <option value="1">客户挂断</option>
+                            <option value="2">坐席挂断</option>
+                            <option value="-1">未知</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label" title="添加时间起">添加时间起</label>
+                    <div class="layui-input-block">
+                        <input type="hidden" name="AddTimeStartMark" value=">=" />
+                        <input type="text" name="AddTimeStart" autocomplete="off" class="layui-input datetimepicker" />
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label" title="添加时间止">添加时间止</label>
+                    <div class="layui-input-block">
+                        <input type="hidden" name="AddTimeEndMark" value="<=" />
+                        <input type="text" name="AddTimeEnd" autocomplete="off" class="layui-input datetimepicker" />
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label" title="获取结果">获取结果</label>
+                    <div class="layui-input-block">
+                        <input type="hidden" name="auto_statusMark" value="=" />
+                        <select name="auto_status">
+                            <option value=""></option>
+                            <option value="0">未获取明细</option>
+                            <option value="1">明细获取成功</option>
+                            <option value="2">明细获取失败</option>
+                            <option value="3">录音下载成功</option>
+                            <option value="4">录音无需下载</option>
+                            <option value="5">录音下载失败</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="layui-card-body">
+            <div class="layui-hide" id="defaultTable" lay-filter="defaultTable"></div>
+        </div>
+    </div>
+
+    <script type="text/html" id="toolbarDemo">
+        <div class="layui-btn-container">
+            <button class="layui-btn layui-btn-sm layui-bg-cyan" lay-event="getB6">前半年</button>
+            <button class="layui-btn layui-btn-sm layui-bg-cyan" lay-event="getB3">前3个月</button>
+            <button class="layui-btn layui-btn-sm layui-bg-cyan" lay-event="getB2">前2个月</button>
+            <button class="layui-btn layui-btn-sm layui-bg-cyan" lay-event="getB1">前1个月</button>
+            <button class="layui-btn layui-btn-sm layui-bg-blue" lay-event="getM6">近半年</button>
+            <button class="layui-btn layui-btn-sm layui-bg-blue" lay-event="getM3">近3个月</button>
+            <button class="layui-btn layui-btn-sm layui-bg-blue" lay-event="getM2">近2个月</button>
+            <button class="layui-btn layui-btn-sm layui-bg-blue" lay-event="getM1">近1个月</button>
+            <button class="layui-btn layui-btn-sm" lay-event="getM">本月</button>
+        </div>
+    </script>
+
+    <script src="@Url.Content("~/layui/layui.js")"></script>
+    <script>
+        layui.config({
+            base: '@Url.Content("~/layui/modules/")'
+        }).use(['element', 'form', 'table', 'layer', 'core'], function () {
+            var $ = layui.jquery,
+                element = layui.element,
+                core = layui.core,
+                layer = layui.layer,
+                form = layui.form,
+                table = layui.table;
+
+            core.defaultQuery.url = '@Url.Content("~/Home/F_13DPSP")';
+
+            table.render({
+                size: 'sm',
+                elem: '#defaultTable',
+                id: 'defaultTable',
+                toolbar: '#toolbarDemo',
+                defaultToolbar: [],
+                method: 'post',
+                where: {
+                    field: 'AddTime',
+                    type: 'desc',
+                    queryString: core.queryString()
+                },
+                page: true,
+                even: true,
+                initSort: {
+                    field: 'AddTime',
+                    type: 'desc'
+                },
+                totalRow: true,
+                autoSort: true,
+                cellMinWidth: 80,
+                cols: [[
+                    { type: 'numbers', fixed: 'left' },
+                    { type: 'checkbox', fixed: 'left' },
+                    { field: 'username', title: '坐席ID', width: 95, sort: true },
+                    { field: 'ani', title: '主叫号码', width: 130, sort: true },
+                    { field: 'dnis', title: '被叫号码', width: 325, sort: true },
+                    { field: 'dani', title: '主叫外显号码', width: 130, sort: true },
+                    { field: 'ddnis', title: '被叫外显号码', width: 130, sort: true },
+                    { field: 'startTime', title: '通话开始时间', width: 145, sort: true },
+                    { field: 'endTime', title: '通话结束时间', width: 145, sort: true },
+                    { field: 'callResult_msg', title: '通话结果', width: 105, sort: true, totalRowText: '合计' },
+                    { field: 'alertDuration', title: '振铃时长', width: 90, sort: true, totalRow: true },
+                    { field: 'talkDuration', title: '通话时间', width: 90, sort: true, totalRow: true },
+                    { field: 'endType_msg', title: '挂断类型', width: 105, sort: true },
+                    { field: 'AddTime', title: '添加时间', width: 145, sort: true },
+                    { field: 'auto_status_msg', title: '获取结果', width: 105, sort: true },
+                    { field: 'auto_err', title: '最后次获取时错误', width: 145, sort: true },
+                    { field: 'UpdateTime', title: '更新时间', width: 145, sort: true },
+                    { field: 'sessionId', title: '会话ID', width: 245, sort: true },
+                    { field: 'suffixAudio', title: '录音', width: 450, sort: true }
+                ]]
+            });
+
+            ///监听事件
+            table.on('toolbar(defaultTable)', function (obj) {
+                var checkStatus = table.checkStatus(obj.config.id);
+                switch (obj.event) {
+                    case 'getB6':
+                        $('input[name="AddTimeStart"]').val('@(DateTime.Now.AddMonths(-6).ToString("yyyy-MM-01 00:00:00"))');
+                        $('input[name="AddTimeEnd"]').val('@(m_cCmn.m_fBLastDay)');
+                        break;
+                    case 'getB3':
+                        $('input[name="AddTimeStart"]').val('@(DateTime.Now.AddMonths(-3).ToString("yyyy-MM-01 00:00:00"))');
+                        $('input[name="AddTimeEnd"]').val('@(m_cCmn.m_fBLastDay)');
+                        break;
+                    case 'getB2':
+                        $('input[name="AddTimeStart"]').val('@(DateTime.Now.AddMonths(-2).ToString("yyyy-MM-01 00:00:00"))');
+                        $('input[name="AddTimeEnd"]').val('@(m_cCmn.m_fBLastDay)');
+                        break;
+                    case 'getB1':
+                        $('input[name="AddTimeStart"]').val('@(DateTime.Now.AddMonths(-1).ToString("yyyy-MM-01 00:00:00"))');
+                        $('input[name="AddTimeEnd"]').val('@(m_cCmn.m_fBLastDay)');
+                        break;
+                    case 'getM6':
+                        $('input[name="AddTimeStart"]').val('@(DateTime.Now.AddMonths(-6).ToString("yyyy-MM-dd 00:00:00"))');
+                        $('input[name="AddTimeEnd"]').val('@(DateTime.Now.ToString("yyyy-MM-dd 23:59:59"))');
+                        break;
+                    case 'getM3':
+                        $('input[name="AddTimeStart"]').val('@(DateTime.Now.AddMonths(-3).ToString("yyyy-MM-dd 00:00:00"))');
+                        $('input[name="AddTimeEnd"]').val('@(DateTime.Now.ToString("yyyy-MM-dd 23:59:59"))');
+                        break;
+                    case 'getM2':
+                        $('input[name="AddTimeStart"]').val('@(DateTime.Now.AddMonths(-2).ToString("yyyy-MM-dd 00:00:00"))');
+                        $('input[name="AddTimeEnd"]').val('@(DateTime.Now.ToString("yyyy-MM-dd 23:59:59"))');
+                        break;
+                    case 'getM1':
+                        $('input[name="AddTimeStart"]').val('@(DateTime.Now.AddMonths(-1).ToString("yyyy-MM-dd 00:00:00"))');
+                        $('input[name="AddTimeEnd"]').val('@(DateTime.Now.ToString("yyyy-MM-dd 23:59:59"))');
+                        break;
+                    case 'getM':
+                        $('input[name="AddTimeStart"]').val('@(DateTime.Now.ToString("yyyy-MM-01 00:00:00"))');
+                        $('input[name="AddTimeEnd"]').val('@(DateTime.Now.ToString("yyyy-MM-dd 23:59:59"))');
+                        break;
+                };
+                $('button[lay-filter="defaultTable"]').eq(0).click();
+            });
+
+            core.loadQuery('@ViewBag.queryString');
+        });
+    </script>
+</body>
+</html>

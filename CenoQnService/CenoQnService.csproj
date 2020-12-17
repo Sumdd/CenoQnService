@@ -17,7 +17,7 @@
     <AssemblyName>CenoQnService</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <MvcBuildViews>false</MvcBuildViews>
-    <UseIISExpress>true</UseIISExpress>
+    <UseIISExpress>false</UseIISExpress>
     <IISExpressSSLPort />
     <IISExpressAnonymousAuthentication />
     <IISExpressWindowsAuthentication />
@@ -501,6 +501,7 @@
     <Content Include="Views\Home\V_5MD5CALL.cshtml" />
     <Content Include="Views\Home\V_10XLIST.cshtml" />
     <Content Include="Views\Home\V_11FILE.cshtml" />
+    <Content Include="升级说明.txt" />
     <Content Include="续联接口使用文档.doc">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -511,6 +512,8 @@
     <Content Include="续联接口对接文档.docx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Views\Home\V_13XP.cshtml" />
+    <Content Include="Views\Home\V_13DPSP.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

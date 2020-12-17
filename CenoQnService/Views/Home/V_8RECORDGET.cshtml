@@ -4,7 +4,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>@ViewBag.Title</title>
-    <link href="../layui/css/layui.css" rel="stylesheet" />
+    <link href="@Url.Content("~/layui/css/layui.css")" rel="stylesheet" />
 </head>
 <body>
     <div class="layui-header">
@@ -57,7 +57,7 @@
             <div class="layui-hide" id="defaultTable" lay-filter="defaultTable"></div>
         </div>
     </div>
-    <script src="../layui/layui.js"></script>
+    <script src="@Url.Content("~/layui/layui.js")"></script>
     <script>
         layui.config({
             base: '@Url.Content("~/layui/modules/")'

@@ -1,0 +1,8 @@
+1.layui table 
+源码改动部分：分页参数
+所以不先升级，还是直接修改源码
+2.layui core
+增加noset，不设置uuid
+3.其余部分如样式如果再修改源码，必须在此处详细记录
+4.layui table
+改动源码：totalRow，如果有数据，优先使用数据
