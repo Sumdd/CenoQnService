@@ -336,7 +336,7 @@ WHERE [sessionId] IN ('{string.Join("','", m_pRecord.AsEnumerable().Select(x => 
                                 if (m_mAudio != null)
                                 {
                                     ///录音下载路径
-                                    string audioUrl = m_mAudio.audioType;
+                                    string audioUrl = m_mAudio.audioUrl;
 
                                     ///是否下载成功
                                     bool m_bRecLoad = false;
@@ -383,7 +383,7 @@ WHERE [sessionId] IN ('{string.Join("','", m_pRecord.AsEnumerable().Select(x => 
                                     {
                                         m_lUpd.Add($@"
 UPDATE [dbo].[call_repair_record]
-SET [UpdateUserId] = GETDATE(),
+SET [UpdateTime] = GETDATE(),
     [auto_status] = 3,
     [suffixAudio] = '{m_sSavePuffixFileName}' 
 WHERE [sessionId] = '{sessionId}';");
@@ -392,7 +392,7 @@ WHERE [sessionId] = '{sessionId}';");
                                     {
                                         m_lUpd.Add($@"
 UPDATE [dbo].[call_repair_record]
-SET [UpdateUserId] = GETDATE(),
+SET [UpdateTime] = GETDATE(),
     [auto_status] = 5,
     [auto_err] = '{errMsg}'
 WHERE [sessionId] = '{sessionId}';");
@@ -403,7 +403,7 @@ WHERE [sessionId] = '{sessionId}';");
                                 {
                                     m_lUpd.Add($@"
 UPDATE [dbo].[call_repair_record]
-SET [UpdateUserId] = GETDATE(),
+SET [UpdateTime] = GETDATE(),
     [auto_status] = (CASE WHEN {talkDuration} <= 0 THEN 4 ELSE 5 END),
     [auto_err] = (CASE WHEN {talkDuration} <= 0 THEN [auto_err] ELSE '无可获取的录音文件' END)
 WHERE [sessionId] = '{sessionId}';");

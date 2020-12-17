@@ -501,9 +501,11 @@
     <Content Include="Views\Home\V_5MD5CALL.cshtml" />
     <Content Include="Views\Home\V_10XLIST.cshtml" />
     <Content Include="Views\Home\V_11FILE.cshtml" />
-    <Content Include="升级说明.txt" />
+    <Content Include="注意事项.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="续联接口使用文档.doc">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="账号信息汇总.xls">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
