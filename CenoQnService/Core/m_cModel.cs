@@ -29,4 +29,11 @@ namespace CenoQnService
             get; set;
         }
     }
+
+    public class m_cAudio
+    {
+        public string sessionId { get; set; }
+        public string audioUrl { get; set; }
+        public string audioType { get; set; }
+    }
 }
