@@ -12,7 +12,7 @@ namespace CenoQnService
     /// </summary>
     public class m_cSugar
     {
-        public m_cSugar(string sConNameStr = null)
+        public m_cSugar(string sConNameStr = null, bool IsAutoCloseConnection = true)
         {
             string sConStr = string.Empty;
 
@@ -48,7 +48,7 @@ namespace CenoQnService
             {
                 ConnectionString = sConStr,
                 DbType = DbType.SqlServer,
-                IsAutoCloseConnection = true,
+                IsAutoCloseConnection = IsAutoCloseConnection,
             });
         }
         public m_cSugar(ConnectionConfig config)

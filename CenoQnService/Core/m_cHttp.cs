@@ -307,8 +307,9 @@ namespace CenoQnService
         #endregion
 
         #region ***下载内容
-        public static Stream HttpGetStream(string Url, string postDataStr = "")
+        public static Stream HttpGetStream(string Url, out string m_sExtentions, string postDataStr = "")
         {
+            m_sExtentions = null;
             try
             {
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(Url + (postDataStr == "" ? "" : "?") + postDataStr);
@@ -324,6 +325,20 @@ namespace CenoQnService
                 const int bufferLength = 1024;
                 byte[] buffer = new byte[bufferLength];
                 int actual = myResponseStream.Read(buffer, 0, bufferLength);
+
+                ///判定是否为AMR格式
+                if (buffer.Length > 4 &&
+                    buffer[0] == 35 &&
+                    buffer[1] == 33 &&
+                    buffer[2] == 65 &&
+                    buffer[3] == 77 &&
+                    buffer[4] == 82
+                    )
+                {
+                    m_sExtentions = ".amr";
+                }
+                else m_sExtentions = string.Empty;
+
                 while (actual > 0)
                 {
                     memoryStream.Write(buffer, 0, actual);

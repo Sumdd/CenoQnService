@@ -17,6 +17,11 @@
         .layui-select-title > input {
             width: 182px;
         }
+
+        .table-link-a {
+            color: #65cea7;
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -119,22 +124,22 @@
                     <label class="layui-form-label" 　title="振铃时长（秒）">振铃时长（秒）</label>
                     <div class="layui-input-inline" style="width: 89px;">
                         <input type="hidden" name="alertDurationStartMark" value=">=" />
-                        <input type="text" name="alertDurationStart" placeholder="秒" autocomplete="off" class="layui-input">
+                        <input type="text" name="alertDurationStart" placeholder="秒" autocomplete="off" class="layui-input input1_2">
                     </div>
                     <div class="layui-input-inline" style="width: 89px;">
                         <input type="hidden" name="alertDurationEndMark" value="<=" />
-                        <input type="text" name="alertDurationEnd" placeholder="秒" autocomplete="off" class="layui-input">
+                        <input type="text" name="alertDurationEnd" placeholder="秒" autocomplete="off" class="layui-input input1_2">
                     </div>
                 </div>
                 <div class="layui-inline">
                     <label class="layui-form-label" 　title="通话时长（秒）">通话时长（秒）</label>
                     <div class="layui-input-inline" style="width: 89px;">
                         <input type="hidden" name="talkDurationStartMark" value=">=" />
-                        <input type="text" name="talkDurationStart" placeholder="秒" autocomplete="off" class="layui-input">
+                        <input type="text" name="talkDurationStart" placeholder="秒" autocomplete="off" class="layui-input input1_2">
                     </div>
                     <div class="layui-input-inline" style="width: 89px;">
                         <input type="hidden" name="talkDurationEndMark" value="<=" />
-                        <input type="text" name="talkDurationEnd" placeholder="秒" autocomplete="off" class="layui-input">
+                        <input type="text" name="talkDurationEnd" placeholder="秒" autocomplete="off" class="layui-input input1_2">
                     </div>
                 </div>
                 <div class="layui-inline">
@@ -209,7 +214,8 @@
                 core = layui.core,
                 layer = layui.layer,
                 form = layui.form,
-                table = layui.table;
+                table = layui.table,
+                prefix = '@(m_cSQL.m_sSaveRecordHttpWithoutIP)'.replace(/##IP##/, window.location.hostname);
 
             core.defaultQuery.url = '@Url.Content("~/Home/F_13DPSP")';
 
@@ -250,10 +256,20 @@
                     { field: 'endType_msg', title: '挂断类型', width: 105, sort: true },
                     { field: 'AddTime', title: '添加时间', width: 145, sort: true },
                     { field: 'auto_status_msg', title: '获取结果', width: 135, sort: true },
-                    { field: 'auto_err', title: '最后次获取时错误', width: 145, sort: true },
+                    { field: 'auto_err', title: '最后次获取时错误', width: 170, sort: true },
                     { field: 'UpdateTime', title: '更新时间', width: 145, sort: true },
-                    { field: 'sessionId', title: '会话ID', width: 245, sort: true },
-                    { field: 'suffixAudio', title: '录音', width: 600, sort: true }
+                    { field: 'sessionId', title: '会话ID', width: 270, sort: true },
+                    {
+                        field: 'suffixAudio', title: '录音', width: 75, sort: true, templet: function (d) {
+                            ///处理录音下载
+                            if (d && d.suffixAudio) {
+                                var href = prefix + d.suffixAudio;
+                                var arr = ['<a class="table-link-a" title="', href, '" href="', href, '" target="_blank">试听</a>'];
+                                return arr.join('');
+                            }
+                            return '';
+                        }
+                    }
                 ]]
             });
 

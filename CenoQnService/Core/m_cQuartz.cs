@@ -337,6 +337,7 @@ WHERE [sessionId] IN ('{string.Join("','", m_pRecord.AsEnumerable().Select(x => 
                                 {
                                     ///录音下载路径
                                     string audioUrl = m_mAudio.audioUrl;
+                                    string audioType = m_mAudio.audioType;
 
                                     ///是否下载成功
                                     bool m_bRecLoad = false;
@@ -346,14 +347,18 @@ WHERE [sessionId] IN ('{string.Join("','", m_pRecord.AsEnumerable().Select(x => 
                                     #region ***直接下载录音并保存
                                     try
                                     {
-                                        using (System.IO.Stream m_pRecIDResult = m_cHttp.HttpGetStream(audioUrl))
+                                        string m_sExtentions = null;
+                                        using (System.IO.Stream m_pRecIDResult = m_cHttp.HttpGetStream(audioUrl, out m_sExtentions))
                                         {
                                             if (m_pRecIDResult != null)
                                             {
+                                                ///兼容AMR后缀情况
+                                                if (string.IsNullOrWhiteSpace(m_sExtentions)) m_sExtentions = System.IO.Path.GetExtension(audioUrl);
+
                                                 m_pRecIDResult.Position = 0;
                                                 //创建对应文件,改变文件名称,形如Rec_20200202;
                                                 DateTime m_dtDateTime = Convert.ToDateTime(startTime);
-                                                string m_sFileName = $"Rec_{m_dtDateTime.ToString("yyyyMMddHHmmss")}_{System.IO.Path.GetFileName(audioUrl)}";
+                                                string m_sFileName = $"Rec_{m_dtDateTime.ToString("yyyyMMddHHmmss")}_{System.IO.Path.GetFileNameWithoutExtension(audioUrl)}{m_sExtentions}";
                                                 m_sSavePuffixFileName = $"/{m_dtDateTime.ToString("yyyy")}/{m_dtDateTime.ToString("yyyyMM")}/{m_dtDateTime.ToString("yyyyMMdd")}/{m_sFileName}";
                                                 string m_sSavePath = $"{m_cSQL.m_sSaveRecordPath}{m_sSavePuffixFileName}";
                                                 string m_sDirectory = System.IO.Path.GetDirectoryName(m_sSavePath);
@@ -368,7 +373,50 @@ WHERE [sessionId] IN ('{string.Join("','", m_pRecord.AsEnumerable().Select(x => 
                                                     }
                                                     m_bRecLoad = true;
                                                 }
-                                                else errMsg = "录音文件已存在无需再次下载";
+                                                else
+                                                {
+                                                    m_bRecLoad = true;
+                                                    errMsg = "录音文件已存在无需再次下载";
+                                                }
+                                                #region ***转MP3格式
+                                                ///文件转换为MP3
+                                                string m_sMP3 = ".mp3";
+                                                bool m_bSwitch = false;
+                                                string m_sMP3File = m_sSavePath.Replace(m_sExtentions, m_sMP3);
+                                                if (!System.IO.File.Exists(m_sMP3File))
+                                                {
+                                                    if (m_cFfmpeg.m_fInToOut(m_sSavePath, m_sMP3File))
+                                                    {
+                                                        m_bSwitch = true;
+                                                    }
+                                                    else errMsg = "mp3录音转换失败";
+                                                }
+                                                else
+                                                {
+                                                    m_bSwitch = true;
+                                                    errMsg = "存在mp3录音转换文件";
+                                                }
+                                                #endregion
+                                                #region ***如果转换成功删除原文件
+                                                ///删除原文件
+                                                if (m_bSwitch)
+                                                {
+                                                    try
+                                                    {
+                                                        System.IO.File.Delete(m_sSavePath);
+                                                    }
+                                                    catch (Exception ex)
+                                                    {
+                                                        errMsg = $"原录音删除错误:{ex.Message}";
+                                                        Log.Instance.Debug($"[CenoQnService][m_cQuartzJob][Execute][File.Delete][录音下载][Exception][{m_sSavePath}:{ex.Message}]");
+                                                    }
+                                                    finally
+                                                    {
+                                                        ///保存转换后的后缀
+                                                        m_sSavePuffixFileName = m_sSavePuffixFileName.Replace(m_sExtentions, m_sMP3);
+                                                    }
+                                                }
+                                                #endregion
                                             }
                                             else errMsg = "下载流非空";
                                         }
@@ -385,7 +433,9 @@ WHERE [sessionId] IN ('{string.Join("','", m_pRecord.AsEnumerable().Select(x => 
 UPDATE [dbo].[call_repair_record]
 SET [UpdateTime] = GETDATE(),
     [auto_status] = 3,
-    [suffixAudio] = '{m_sSavePuffixFileName}' 
+    [auto_err] = (CASE WHEN '{errMsg}' != '' THEN '{errMsg}' ELSE [auto_err] END),
+    [suffixAudio] = '{m_sSavePuffixFileName}', 
+    [extAudio] = '{audioType}' 
 WHERE [sessionId] = '{sessionId}';");
                                     }
                                     else

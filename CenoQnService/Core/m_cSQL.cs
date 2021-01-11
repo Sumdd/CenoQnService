@@ -5,6 +5,8 @@ using System.Web;
 using SqlSugar;
 using System.Data;
 using System.Collections;
+using System.Data.SqlClient;
+using System.Text.RegularExpressions;
 
 namespace CenoQnService
 {
@@ -139,6 +141,34 @@ VALUES
         }
 
         public static DataTable m_fRecordList()
+        {
+            try
+            {
+                string m_sSQL = $@"
+SELECT TOP 100
+    call_repair_record.sessionId
+FROM call_repair_record WITH (NOLOCK)
+WHERE 1 = 1
+      AND ISNULL(IsDel, 0) = 0
+      AND ISNULL(auto_status, 0) IN ( 0, 2 )
+      AND
+      (
+          UpdateTime <= '{DateTime.Now.AddMinutes(-10).ToString("yyyy-MM-dd HH:mm:ss")}'
+          OR UpdateTime IS NULL
+      );
+";
+                SqlSugarClient m_pEsyClient = new m_cSugar().EasyClient;
+                DataTable m_pDataTable = m_pEsyClient.Ado.GetDataTable(m_sSQL);
+                return m_pDataTable;
+            }
+            catch (Exception ex)
+            {
+                Log.Instance.Debug($"[CenoQnService][m_cSQL][m_fRecordList][Exception][{ex.Message}]");
+            }
+            return null;
+        }
+
+        public static DataTable m_fGetRecUrl(string sessionIds)
         {
             try
             {
@@ -340,6 +370,95 @@ WHERE 1 = 1
             return null;
         }
 
+        public static bool m_fQueryRepeat(DataTable m_pDataTable, out DataTable m_pSheet1, out string m_sErrMsg)
+        {
+            m_pSheet1 = null;
+            m_sErrMsg = string.Empty;
+            try
+            {
+                using (SqlSugarClient m_pEsyClient = new m_cSugar(null, false).EasyClient)
+                {
+                    m_pEsyClient.Ado.CommandTimeOut = 0;
+                    m_pEsyClient.Open();
+
+                    ///创建临时表
+                    m_pEsyClient.Ado.ExecuteCommand(m_cSQL.m_fCreateTempTable(m_pDataTable, true));
+
+                    ///先写入临时表
+                    SqlBulkCopy bulkCopy = new SqlBulkCopy((SqlConnection)(m_pEsyClient.Ado.Connection), SqlBulkCopyOptions.FireTriggers | SqlBulkCopyOptions.CheckConstraints, null);
+                    bulkCopy.BulkCopyTimeout = int.MaxValue;
+                    bulkCopy.BatchSize = 800;//经过实验获得的最快的数值
+                    bulkCopy.DestinationTableName = "#tUserData";
+                    bulkCopy.WriteToServer(m_pDataTable);
+                    bulkCopy.Close();
+
+                    string m_sSQL = $@"
+SELECT T0.*,
+       CASE
+           WHEN T2.N1 > 1 THEN
+               CONCAT('重复', T2.N1, '次')
+           ELSE
+               NULL
+       END AS 'Excel_Err',
+       CASE
+           WHEN T3.N2 > 0 THEN
+               CONCAT('已传', T3.N2, '次:', T3.R2)
+           ELSE
+               CONVERT(VARCHAR(20), T3.N2)
+       END AS 'SQLDB_Err'
+FROM [#tUserData] T0 WITH (NOLOCK)
+    OUTER APPLY
+(
+    SELECT COUNT(1) AS N1
+    FROM [#tUserData] T1 WITH (NOLOCK)
+    WHERE T1.[cid] = T0.[cid]
+) T2
+    OUTER APPLY
+(
+    SELECT COUNT(1) AS N2,
+           MAX([dbo].[call_repair_info].[requestID]) AS R2
+    FROM [dbo].[call_repair_info] WITH (NOLOCK)
+        LEFT JOIN [dbo].[call_repair] WITH (NOLOCK)
+            ON [dbo].[call_repair_info].[requestID] = [dbo].[call_repair].[RequestID]
+    WHERE ISNULL([dbo].[call_repair_info].[IsDel], 0) = 0
+          AND ISNULL([dbo].[call_repair].[IsDel], 0) = 0
+          AND [dbo].[call_repair_info].[Shfzh] = T0.[cid]
+    GROUP BY [dbo].[call_repair_info].[Shfzh]
+) T3;
+DROP TABLE [#tUserData];
+";
+                    ///得到新结果表
+                    DataTable Sheet1 = m_pEsyClient.Ado.GetDataTable(m_sSQL);
+                    if (Sheet1 != null && Sheet1.Rows.Count > 0)
+                    {
+                        DataTable m_lDataRow = Sheet1.Select($" ISNULL([Excel_Err],'') <> '' OR ISNULL([SQLDB_Err],'') <> '' ").CopyToDataTable();
+                        if (m_lDataRow != null && m_lDataRow.Rows.Count > 0)
+                        {
+                            m_pSheet1 = m_lDataRow.Copy();
+                            m_sErrMsg = "含重复数据";
+                            return true;
+                        }
+                        else
+                        {
+                            m_sErrMsg = "成功";
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        m_sErrMsg = "数据结果集非空";
+                        return true;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Instance.Debug($"[CenoQnService][m_cSQL][m_fQueryRepeat][Exception][{ex.Message}]");
+                m_sErrMsg = ex.Message;
+                return true;
+            }
+        }
+
         #region ***数据库参数
 
         #region ***录音下载Http地址
@@ -350,6 +469,21 @@ WHERE 1 = 1
             {
                 if (_m_sSaveRecordHttp == null) _m_sSaveRecordHttp = m_cSQL.m_fGetPValue("m_sSaveRecordHttp");
                 return _m_sSaveRecordHttp;
+            }
+        }
+        private static string _m_sSaveRecordHttpWithoutIP;
+        public static string m_sSaveRecordHttpWithoutIP
+        {
+            get
+            {
+                if (_m_sSaveRecordHttpWithoutIP == null)
+                {
+                    ///置换IP
+                    Regex m_pRegex = new Regex(@"(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)\.(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)\.(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)\.(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)");
+                    _m_sSaveRecordHttpWithoutIP = m_pRegex.Replace(m_sSaveRecordHttp, "##IP##");
+                    return _m_sSaveRecordHttpWithoutIP;
+                }
+                return _m_sSaveRecordHttpWithoutIP;
             }
         }
         #endregion
@@ -388,6 +522,35 @@ WHERE call_repair_p.pcode = @m_sPCode;";
         }
         #endregion
 
+        #endregion
+
+        #region ***创建临时表
+        public static string m_fCreateTempTable(DataTable dtUserData, bool m_bString)
+        {
+            string createTempTablesql = @"CREATE TABLE #tUserData
+                                            (
+                                                {0}
+                                            );";
+            Dictionary<Type, string> dataDictionary = new Dictionary<Type, string>();
+            dataDictionary[typeof(decimal)] = dataDictionary[typeof(double)] = " decimal(18,6) ";
+            dataDictionary[typeof(int)] = dataDictionary[typeof(long)] = " bigint ";
+            dataDictionary[typeof(string)] = " nvarchar(max) ";
+            dataDictionary[typeof(DateTime)] = " DateTime ";
+            dataDictionary[typeof(object)] = " nvarchar(max) ";
+
+            List<string> colSqlList = new List<string>();
+            foreach (DataColumn col in dtUserData.Columns)
+            {
+                string colDataType = dataDictionary[col.DataType];
+                if (col.DataType != typeof(DateTime) && m_bString) colDataType = " nvarchar(max) ";
+
+                string colSql = string.Format(@" [{0}] {1} ", col.ColumnName, colDataType);
+                colSqlList.Add(colSql);
+            }
+            createTempTablesql = string.Format(createTempTablesql,
+                string.Join(",", colSqlList));
+            return createTempTablesql;
+        }
         #endregion
     }
 }

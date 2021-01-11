@@ -91,6 +91,15 @@
                     </div>
                 </div>
                 <div class="layui-form-item">
+                    <label class="layui-form-label" title="是否判重">是否判重</label>
+                    <div class="layui-input-block">
+                        <select name="isRepeat" required lay-verify="required" lay-verType="tips" autocomplete="off">
+                            <option value="0">否</option>
+                            <option value="1" selected="selected">是</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-form-item">
                     <label class="layui-form-label">选择</label>
                     <div class="layui-input-block">
                         <button type="button" class="layui-btn" id="btnUpload">
@@ -129,7 +138,12 @@
                 layer = layui.layer,
                 form = layui.form,
                 table = layui.table,
-                upload = layui.upload;
+                upload = layui.upload,
+                clearTableFun = function (id) {
+                    table.reload(id, {
+                        data: null
+                    });
+                };
 
             //上传文件
             upload.render({
@@ -147,13 +161,15 @@
                         var entSecret = $('input[name=\'entSecret\']').val();
                         var requestID = $('input[name=\'requestID\']').val();
                         var subId = $('select[name=\'subId\']').val();
+                        var isRepeat = $('select[name=\'isRepeat\']').val();
                         return JSON.stringify({
                             entID: entID,
                             entSecret: entSecret,
                             requestID: requestID,
                             subId: subId,
                             isSave: "1",
-                            isMustYwy: "1"
+                            isMustYwy: "1",
+                            isRepeat: isRepeat
                         })
                     }
                 },
@@ -166,6 +182,9 @@
                 chooseAfter: function (e) {
                     $('#btnUpload').hasClass('layui-btn-danger') || $('#btnUpload').addClass('layui-btn-danger');
                     $('#btnUpload').html('<i class="layui-icon">&#xe67c;</i>已选择');
+
+                    ///清除数据
+                    clearTableFun('defaultTable');
                 },
                 done: function (res, index, upload) {
                     top.layer.closeAll('loading');
@@ -173,6 +192,12 @@
                         core.layInfo(res.msg);
                     } else {
                         core.layWarn(res.msg);
+                        ///403
+                        if (res.status * 1 === 403) {
+                            table.reload('defaultTable', {
+                                data: res.data
+                            });
+                        }
                     }
                     ///刷新请求ID
                     $('input[name=\'requestID\']').val(res.uuid);
@@ -181,6 +206,31 @@
                     top.layer.closeAll('loading');
                     core.layErr('上传文件异常,请重新尝试');
                 }
+            });
+
+            ///错误数据列表
+            table.render({
+                size: 'sm',
+                elem: '#defaultTable',
+                id: 'defaultTable',
+                ///toolbar: '#toolbarDemo',
+                defaultToolbar: [],
+                method: 'post',
+                page: false,
+                even: true,
+                autoSort: false,
+                cellMinWidth: 80,
+                cols: [[
+                    { type: 'numbers', fixed: 'left' },
+                    { type: 'checkbox', fixed: 'left' },
+                    { field: 'sno', title: '数据唯一标识' },
+                    { field: 'cid', title: '身份证' },
+                    { field: 'username', title: '坐席登录ID' },
+                    { field: 'Xm', title: '姓名' },
+                    { field: 'Ywy', title: '业务员' },
+                    { field: 'Excel_Err', title: '表格_Err' },
+                    { field: 'SQLDB_Err', title: '数据库_Err' },
+                ]]
             });
         });
     </script>

@@ -3,3 +3,4 @@
 
 /*@作者 王卫东*/
 body{background-color:#f2f2f2}.mt10{margin-top:10px}.layui-nav{border-radius:0}.layui-layout-right{right:20px}.layuiadmin-card-header-auto{padding-top:15px;padding-bottom:15px;height:auto}.layuiadmin-card-header-auto .layui-btn{vertical-align:baseline;line-height:0;margin-left:0}.layui-fluid{padding:15px}
+.layui-inline .layui-input-block .layui-input:not(.input1_2){width:182px}

@@ -292,6 +292,7 @@
     <Compile Include="Core\m_cCore.cs" />
     <Compile Include="Core\m_cDigest.cs" />
     <Compile Include="Core\m_cExcel.cs" />
+    <Compile Include="Core\m_cFfmpeg.cs" />
     <Compile Include="Core\m_cJSON.cs" />
     <Compile Include="Core\m_cLog.cs" />
     <Compile Include="Core\m_cHttp.cs" />
@@ -315,6 +316,9 @@
   <ItemGroup>
     <Content Include="Areas\HelpPage\HelpPage.css" />
     <Content Include="favicon.ico" />
+    <Content Include="ffmpeg.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Global.asax" />
     <Content Include="layui\css\layui.css" />
     <Content Include="layui\css\layui.mobile.css" />

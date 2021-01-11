@@ -1570,6 +1570,8 @@ WHERE ISNULL(call_repair_list.IsDel,0) = 0
                 }
                 ///设定Ywy是否必填
                 bool isMustYwy = m_cQuery.m_fGetQueryString(m_lQueryList, "isMustYwy") == "1";
+                ///是否判重
+                bool isRepeat = m_cQuery.m_fGetQueryString(m_lQueryList, "isRepeat") == "1";
                 ///是否返回文件的内容JSON
                 string hasJsonStr = m_cQuery.m_fGetQueryString(m_lQueryList, "hasJson");
                 if (string.IsNullOrWhiteSpace(hasJsonStr)) hasJsonStr = "1";
@@ -1607,6 +1609,7 @@ WHERE ISNULL(call_repair_list.IsDel,0) = 0
                     throw new Exception("Sheet1中无Xm列");
                 if (!dt.Columns.Contains("Ywy"))
                     throw new Exception("Sheet1中无Ywy列");
+
                 ///增加MD5身份证列
                 dt.Columns.Add("MD5Shfzh", typeof(string));
 
@@ -1627,6 +1630,25 @@ WHERE ISNULL(call_repair_list.IsDel,0) = 0
                     ///判断Ywy是否非空
                     if (isMustYwy && string.IsNullOrWhiteSpace(item["Ywy"]?.ToString()))
                         throw new Exception($"业务员必填：第{i}行");
+                }
+
+                ///增加判重逻辑
+                if (isRepeat)
+                {
+                    DataTable m_pSheet1 = null;
+                    bool m_bIsRepeat = m_cSQL.m_fQueryRepeat(dt, out m_pSheet1, out msg);
+                    if (m_bIsRepeat)
+                    {
+                        if (m_pSheet1 != null && m_pSheet1.Rows.Count > 0) count = m_pSheet1.Rows.Count;
+                        return Json(new
+                        {
+                            status = 403,
+                            msg = msg,
+                            count = count,
+                            data = m_cJSON.m_fDataTableToIList(m_pSheet1),
+                            uuid = m_cCmn.UUID(entID)
+                        });
+                    }
                 }
 
                 ///转类至新文件并提交
@@ -2009,6 +2031,48 @@ WHERE ISNULL(call_repair_list.IsDel,0) = 0
                     data = data,
                     totalRow = qop.totalRow
                 });
+            }
+            catch (Exception ex)
+            {
+                Log.Instance.Debug(ex);
+                msg = ex.Message;
+            }
+            return eJson(m_cCcCfg.entID);
+        }
+        #endregion
+
+        #region ***录音下载本地模式
+        public JsonResult F_7RecLoad(string queryString)
+        {
+            try
+            {
+                List<m_cQuery> m_lQueryList = m_cQuery.m_fSetQueryList(queryString);
+                ///外呼标识号非空
+                string sessionIds = m_cQuery.m_fGetQueryString(m_lQueryList, "sessionIds");
+                if (string.IsNullOrWhiteSpace(sessionIds))
+                    throw new ArgumentNullException("sessionIds");
+
+                DataTable m_pDataTable = new DataTable();
+                if (m_pDataTable != null && m_pDataTable.Rows.Count > 0)
+                {
+                    List<object> m_lObject = new List<object>();
+                    foreach (DataRow item in m_pDataTable.Rows)
+                    {
+                        object m_oObject = new
+                        {
+                            sessionId = item["sessionId"]?.ToString(),
+                            audioUrl = item["audioUrl"]?.ToString(),
+                            audioType = item["audioType"]?.ToString()
+                        };
+                        m_lObject.Add(m_oObject);
+                    }
+                    data = m_lObject;
+                    return rJson(m_cCcCfg.entID);
+                }
+                else
+                {
+                    msg = "请求无返回";
+                }
             }
             catch (Exception ex)
             {
