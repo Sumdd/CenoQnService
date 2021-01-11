@@ -15,6 +15,17 @@
 
 6.layui.css 增加一个长度样式
 
+7.dingfengli由于amr无法播放问题需重新下载录音,语句
+	/*  
+		UPDATE call_repair_record 
+		SET UpdateUserId = 'Wwd',
+		auto_status = 1 
+		WHERE
+			auto_status = 3;
+	*/
+
+8.调用频次过快问题,暂时不做修改即可,问题不大因为会再次查询
+
 END
 	数据库需要结构上的完全同步
 	数据上只需要call_repair_p做个性化修正
