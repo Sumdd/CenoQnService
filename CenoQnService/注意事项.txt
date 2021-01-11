@@ -26,6 +26,8 @@
 
 8.调用频次过快问题,暂时不做修改即可,问题不大因为会再次查询
 
+9.更新网站静态缓存 http://localhost:6861/dingfengli/Home/BT_1REQ?m_sRefresh=1
+
 END
 	数据库需要结构上的完全同步
 	数据上只需要call_repair_p做个性化修正
