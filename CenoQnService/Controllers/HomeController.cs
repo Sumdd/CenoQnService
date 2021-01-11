@@ -1359,9 +1359,15 @@ namespace CenoQnService.Controllers
         #endregion
 
         #region +++定时器激活网站
-        public void BT_1REQ()
+        public void BT_1REQ(string m_sRefresh)
         {
             Log.Instance.Debug($"[CenoQnService][HomeController][BT_1REQ][激活]");
+
+            if (!string.IsNullOrWhiteSpace(m_sRefresh))
+            {
+                m_cSQL.m_fReload();
+            }
+
             m_fResponse("+OK");
         }
         #endregion

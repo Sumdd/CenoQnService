@@ -522,6 +522,23 @@ WHERE call_repair_p.pcode = @m_sPCode;";
         }
         #endregion
 
+        #region ***静态变量重载
+        public static void m_fReload()
+        {
+            try
+            {
+                m_cSQL._m_sSaveRecordHttp = null;
+                m_cSQL._m_sSaveRecordHttpWithoutIP = null;
+                m_cSQL._m_sSaveRecordPath = null;
+                Log.Instance.Debug($"[CenoQnService][m_cSQL][m_fReload][清理静态变量]");
+            }
+            catch (Exception ex)
+            {
+                Log.Instance.Debug($"[CenoQnService][m_cSQL][m_fReload][Exception][{ex.Message}]");
+            }
+        }
+        #endregion
+
         #endregion
 
         #region ***创建临时表
