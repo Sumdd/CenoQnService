@@ -431,10 +431,10 @@ DROP TABLE [#tUserData];
                     DataTable Sheet1 = m_pEsyClient.Ado.GetDataTable(m_sSQL);
                     if (Sheet1 != null && Sheet1.Rows.Count > 0)
                     {
-                        DataTable m_lDataRow = Sheet1.Select($" ISNULL([Excel_Err],'') <> '' OR ISNULL([SQLDB_Err],'') <> '' ").CopyToDataTable();
-                        if (m_lDataRow != null && m_lDataRow.Rows.Count > 0)
+                        DataRow[] m_lDataRow = Sheet1.Select($" ISNULL([Excel_Err],'') <> '' OR ISNULL([SQLDB_Err],'') <> '' ");
+                        if (m_lDataRow != null && m_lDataRow.Count() > 0)
                         {
-                            m_pSheet1 = m_lDataRow.Copy();
+                            m_pSheet1 = m_lDataRow.CopyToDataTable();
                             m_sErrMsg = "含重复数据";
                             return true;
                         }
